@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand';
-import { authApi, getToken, removeToken } from '../src/services';
+import { authApi, getToken, removeToken, getUserData, setUserData, removeUserData } from '../src/services';
 import { User } from '../src/types';
 
 interface AuthState {
@@ -33,31 +33,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     /**
      * Initialize auth state - check for existing token on app load
+     * Uses cached user data for offline support
      */
     initAuth: async () => {
         try {
             const token = await getToken();
+            const cachedUser = await getUserData();
 
-            if (token) {
-                // Token exists, try to get current user
+            if (token && cachedUser) {
+                // We have token and cached user data, set authenticated state
+                set({
+                    isAuthenticated: true,
+                    user: cachedUser,
+                    token,
+                    isInitialized: true,
+                });
+
+                // Try to refresh user data from API if online
+                // This runs in background and doesn't block the UI
                 try {
                     const response = await authApi.getCurrentUser();
                     if (response.success) {
-                        set({
-                            isAuthenticated: true,
-                            user: response.data.user,
-                            token,
-                            isInitialized: true,
-                        });
-                        return;
+                        // Update with fresh data from server
+                        set({ user: response.data.user });
+                        await setUserData(response.data.user);
                     }
-                } catch (error) {
-                    // Token invalid, remove it
-                    await removeToken();
+                } catch (error: any) {
+                    // Check if error is 401 (unauthorized) - token is invalid
+                    if (error.response?.status === 401) {
+                        // Token is invalid, clear everything
+                        await removeToken();
+                        await removeUserData();
+                        set({ isAuthenticated: false, user: null, token: null });
+                    }
+                    // For network errors or other errors, keep using cached data
+                    // This allows offline usage
                 }
+            } else {
+                // No token or cached user, user needs to login
+                set({ isInitialized: true, isAuthenticated: false });
             }
-
-            set({ isInitialized: true, isAuthenticated: false });
         } catch (error) {
             set({ isInitialized: true, isAuthenticated: false });
         }

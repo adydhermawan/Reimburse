@@ -8,6 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 
 // Storage keys
 const TOKEN_KEY = 'auth_token';
+const USER_DATA_KEY = 'user_data';
 
 // Base URL - Change this for production or physical device testing
 // For physical device testing, use your computer's IP address
@@ -37,6 +38,33 @@ export const removeToken = async (): Promise<void> => {
         await SecureStore.deleteItemAsync(TOKEN_KEY);
     } catch (error) {
         console.error('Error removing token:', error);
+    }
+};
+
+// User data storage helpers for offline support
+export const getUserData = async (): Promise<any | null> => {
+    try {
+        const userData = await SecureStore.getItemAsync(USER_DATA_KEY);
+        return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+        console.error('Error getting user data:', error);
+        return null;
+    }
+};
+
+export const setUserData = async (user: any): Promise<void> => {
+    try {
+        await SecureStore.setItemAsync(USER_DATA_KEY, JSON.stringify(user));
+    } catch (error) {
+        console.error('Error setting user data:', error);
+    }
+};
+
+export const removeUserData = async (): Promise<void> => {
+    try {
+        await SecureStore.deleteItemAsync(USER_DATA_KEY);
+    } catch (error) {
+        console.error('Error removing user data:', error);
     }
 };
 

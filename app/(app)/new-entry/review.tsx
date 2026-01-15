@@ -36,8 +36,9 @@ export default function ReviewScreen() {
 
         const categoryId = getCategoryId();
 
-        if (!categoryId) {
-            setLocalError('Kategori tidak valid. Silakan pilih ulang.');
+        // Validate: either categoryId or category name must exist
+        if (!categoryId && !entry.category) {
+            setLocalError('Kategori harus diisi.');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             return;
         }
@@ -57,21 +58,27 @@ export default function ReviewScreen() {
         // Format date
         const formattedDate = entry.date.toISOString().split('T')[0];
 
+        // Prepare base data
+        const baseData: any = {
+            client_name: entry.client,
+            amount: parseInt(entry.amount),
+            transaction_date: formattedDate,
+            note: entry.note || undefined,
+        };
+
+        // Add category_id if available, otherwise use category_name
+        if (categoryId) {
+            baseData.category_id = categoryId;
+        } else {
+            baseData.category_name = entry.category;
+        }
+
         // Check if we're offline
         if (!isOnline) {
             // Save to offline queue
             setIsSavingOffline(true);
             try {
-                await addPendingSubmission(
-                    {
-                        client_name: entry.client,
-                        category_id: categoryId,
-                        amount: parseInt(entry.amount),
-                        transaction_date: formattedDate,
-                        note: entry.note || undefined,
-                    },
-                    entry.imageUri
-                );
+                await addPendingSubmission(baseData, entry.imageUri);
 
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 entry.reset();
@@ -108,11 +115,7 @@ export default function ReviewScreen() {
         }
 
         const result = await createReimbursement({
-            client_name: entry.client,
-            category_id: categoryId,
-            amount: parseInt(entry.amount),
-            transaction_date: formattedDate,
-            note: entry.note || undefined,
+            ...baseData,
             image: imageData,
         });
 

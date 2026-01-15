@@ -3,7 +3,7 @@
  * Handles authentication endpoints
  */
 
-import api, { setToken, removeToken } from './api';
+import api, { setToken, removeToken, setUserData, removeUserData } from './api';
 import { ApiResponse, AuthData, User } from '../types';
 
 export const authApi = {
@@ -16,9 +16,10 @@ export const authApi = {
             password,
         });
 
-        // Store token on successful login
+        // Store token and user data on successful login
         if (response.data.success && response.data.data.token) {
             await setToken(response.data.data.token);
+            await setUserData(response.data.data.user);
         }
 
         return response.data;
@@ -40,9 +41,10 @@ export const authApi = {
             password_confirmation,
         });
 
-        // Store token on successful registration
+        // Store token and user data on successful registration
         if (response.data.success && response.data.data.token) {
             await setToken(response.data.data.token);
+            await setUserData(response.data.data.user);
         }
 
         return response.data;
@@ -56,8 +58,9 @@ export const authApi = {
             const response = await api.post<ApiResponse<null>>('/auth/logout');
             return response.data;
         } finally {
-            // Always remove token, even if API call fails
+            // Always remove token and user data, even if API call fails
             await removeToken();
+            await removeUserData();
         }
     },
 
