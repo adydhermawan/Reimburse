@@ -3,7 +3,7 @@
  * Central export for all API services
  */
 
-export { default as api, getToken, setToken, removeToken, API_BASE_URL } from './api';
+export { default as api, getToken, setToken, removeToken, getUserData, setUserData, removeUserData, API_BASE_URL } from './api';
 export { default as authApi } from './authApi';
 export { default as categoryApi } from './categoryApi';
 export { default as clientApi } from './clientApi';
