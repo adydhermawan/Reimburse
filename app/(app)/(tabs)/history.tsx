@@ -273,7 +273,7 @@ export default function HistoryScreen() {
                                             {item.client?.name || 'Unknown Client'}
                                         </Text>
                                         <Text className="text-text-secondary text-xs">
-                                            {item.category?.name || 'No Category'} • {formatDate(item.transaction_date)}
+                                            {item.category?.name || item.category_name || 'No Category'} • {formatDate(item.transaction_date)}
                                         </Text>
                                     </View>
                                 </View>

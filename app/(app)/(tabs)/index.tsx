@@ -314,7 +314,7 @@ export default function Dashboard() {
                                                 {item.client?.name || 'Unknown Client'}
                                             </Text>
                                             <Text className="text-text-secondary text-xs">
-                                                {item.category?.name || 'No Category'} • {new Date(item.transaction_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                                {item.category?.name || item.category_name || 'No Category'} • {new Date(item.transaction_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                             </Text>
                                         </View>
                                     </View>

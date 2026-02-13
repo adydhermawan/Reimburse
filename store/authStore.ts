@@ -40,23 +40,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const token = await getToken();
             const cachedUser = await getUserData();
 
-            if (token && cachedUser) {
-                // We have token and cached user data, set authenticated state
-                set({
-                    isAuthenticated: true,
-                    user: cachedUser,
-                    token,
-                    isInitialized: true,
-                });
+            if (token) {
+                // We have a token
+                if (cachedUser) {
+                    // We have cached user data, set authenticated state immediately
+                    set({
+                        isAuthenticated: true,
+                        user: cachedUser,
+                        token,
+                        isInitialized: true,
+                    });
+                } else {
+                    // Token exists but no cached user, set token and try to fetch user
+                    // Don't set isAuthenticated yet to avoid UI flicker, or set it but show loading
+                    set({ token });
+                }
 
-                // Try to refresh user data from API if online
-                // This runs in background and doesn't block the UI
+                // Try to refresh/fetch user data from API
                 try {
                     const response = await authApi.getCurrentUser();
                     if (response.success) {
                         // Update with fresh data from server
-                        set({ user: response.data.user });
+                        set({
+                            isAuthenticated: true,
+                            user: response.data.user,
+                            isInitialized: true,
+                        });
                         await setUserData(response.data.user);
+                    } else {
+                        // Failed to get user, if we didn't have cached user, we must logout
+                        if (!cachedUser) throw new Error('Failed to fetch user');
                     }
                 } catch (error: any) {
                     // Check if error is 401 (unauthorized) - token is invalid
@@ -64,13 +77,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                         // Token is invalid, clear everything
                         await removeToken();
                         await removeUserData();
-                        set({ isAuthenticated: false, user: null, token: null });
+                        set({ isAuthenticated: false, user: null, token: null, isInitialized: true });
+                    } else {
+                        // Network error or other error
+                        if (cachedUser) {
+                            // Keep using cached data if we have it
+                            console.log('Using cached user data due to error:', error.message);
+                        } else {
+                            // No cached user and failed api call - we can't authenticate
+                            // But maybe don't logout for network errors? 
+                            // For now, if no cache and no network, we might be stuck.
+                            // Better to assume we are authenticated if we have a token, but we need user data.
+                            // If we can't get user data and have no cache, we probably should logout or show retry.
+                            // Let's safe fail to logout if we really can't get user.
+                            set({ isInitialized: true, isAuthenticated: false });
+                        }
                     }
-                    // For network errors or other errors, keep using cached data
-                    // This allows offline usage
                 }
             } else {
-                // No token or cached user, user needs to login
+                // No token, user needs to login
                 set({ isInitialized: true, isAuthenticated: false });
             }
         } catch (error) {

@@ -59,6 +59,7 @@ export interface Reimbursement {
     user_id: number;
     client_id: number;
     category_id: number;
+    category_name?: string | null;
     report_id?: number | null;
     amount: string;
     transaction_date: string;
