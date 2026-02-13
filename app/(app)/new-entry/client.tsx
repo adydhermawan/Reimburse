@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 export default function ClientScreen() {
     const router = useRouter();
     const setClient = useNewEntryStore((state) => state.setClient);
+    const setStep = useNewEntryStore((state) => state.setStep);
     const compressionStatus = useNewEntryStore((state) => state.compressionStatus);
 
     const { clients, isLoading, isCreating, fetchClients, createClient } = useClientStore();
@@ -21,6 +22,7 @@ export default function ClientScreen() {
     // Fetch clients on mount
     useEffect(() => {
         fetchClients();
+        setStep(4);
     }, []);
 
     // Debounced search

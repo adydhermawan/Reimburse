@@ -48,22 +48,19 @@ export const reimbursementApi = {
      * Create new reimbursement with image upload
      * Uses FormData for multipart/form-data
      */
-    createReimbursement: async (data: {
-        client_name: string;
-        category_id: number;
-        amount: number;
-        transaction_date: string;
-        note?: string;
-        image?: {
-            uri: string;
-            type: string;
-            name: string;
-        };
-    }): Promise<ApiResponse<Reimbursement>> => {
+    createReimbursement: async (data: CreateReimbursementRequest): Promise<ApiResponse<Reimbursement>> => {
         const formData = new FormData();
 
         formData.append('client_name', data.client_name);
-        formData.append('category_id', data.category_id.toString());
+
+        if (data.category_id) {
+            formData.append('category_id', data.category_id.toString());
+        }
+
+        if (data.category_name) {
+            formData.append('category_name', data.category_name);
+        }
+
         formData.append('amount', data.amount.toString());
         formData.append('transaction_date', data.transaction_date);
 
@@ -96,18 +93,7 @@ export const reimbursementApi = {
      */
     updateReimbursement: async (
         id: number,
-        data: {
-            client_name?: string;
-            category_id?: number;
-            amount?: number;
-            transaction_date?: string;
-            note?: string;
-            image?: {
-                uri: string;
-                type: string;
-                name: string;
-            };
-        }
+        data: Partial<CreateReimbursementRequest>
     ): Promise<ApiResponse<Reimbursement>> => {
         const formData = new FormData();
 
@@ -116,6 +102,7 @@ export const reimbursementApi = {
 
         if (data.client_name) formData.append('client_name', data.client_name);
         if (data.category_id) formData.append('category_id', data.category_id.toString());
+        if (data.category_name) formData.append('category_name', data.category_name);
         if (data.amount) formData.append('amount', data.amount.toString());
         if (data.transaction_date) formData.append('transaction_date', data.transaction_date);
         if (data.note !== undefined) formData.append('note', data.note || '');

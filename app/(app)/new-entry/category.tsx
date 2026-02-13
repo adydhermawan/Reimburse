@@ -31,6 +31,7 @@ export default function CategoryScreen() {
     const router = useRouter();
     const setCategory = useNewEntryStore((state) => state.setCategory);
     const setCategoryId = useNewEntryStore((state) => state.setCategoryId);
+    const setStep = useNewEntryStore((state) => state.setStep);
     const selectedCategory = useNewEntryStore((state) => state.category);
     const compressionStatus = useNewEntryStore((state) => state.compressionStatus);
 
@@ -41,6 +42,7 @@ export default function CategoryScreen() {
 
     useEffect(() => {
         fetchCategories();
+        setStep(3);
     }, []);
 
     const handleSelect = (categoryId: number, categoryName: string) => {
@@ -58,7 +60,8 @@ export default function CategoryScreen() {
     const handleCustomSubmit = () => {
         if (customCategory.trim()) {
             Haptics.selectionAsync();
-            setCategory(customCategory);
+            setCategoryId(undefined);
+            setCategory(customCategory.trim());
             setIsOtherModalVisible(false);
             router.push('/(app)/new-entry/client');
         }

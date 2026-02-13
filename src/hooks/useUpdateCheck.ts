@@ -11,6 +11,11 @@ interface UseUpdateCheckResult {
     checkForUpdates: () => Promise<void>;
     applyOTAUpdate: () => Promise<void>;
     promptAPKDownload: () => void;
+    // New properties
+    showDownloadModal: boolean;
+    downloadProgress: number;
+    startDownload: () => void;
+    cancelDownload: () => void;
 }
 
 /**
@@ -24,6 +29,10 @@ export function useUpdateCheck(autoCheck: boolean = true): UseUpdateCheckResult 
     const [apkVersionInfo, setApkVersionInfo] = useState<AppVersionInfo | null>(null);
     const [isApplying, setIsApplying] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // New state
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const [downloadProgress, setDownloadProgress] = useState(0);
 
     const checkForUpdates = useCallback(async () => {
         setIsChecking(true);
@@ -79,9 +88,48 @@ export function useUpdateCheck(autoCheck: boolean = true): UseUpdateCheckResult 
 
     const promptAPKDownload = useCallback(() => {
         if (apkVersionInfo) {
-            updateService.promptAPKDownload(apkVersionInfo);
+            // Updated to allow user to choose download
+            Alert.alert(
+                'Update Tersedia',
+                apkVersionInfo.release_notes
+                    ? `Versi ${apkVersionInfo.version} tersedia!\n\n${apkVersionInfo.release_notes}`
+                    : `Versi ${apkVersionInfo.version} tersedia!`,
+                [
+                    { text: 'Nanti', style: 'cancel' },
+                    {
+                        text: 'Download & Install',
+                        onPress: () => {
+                            setShowDownloadModal(true);
+                            startDownload();
+                        }
+                    }
+                ],
+                { cancelable: !apkVersionInfo.is_mandatory }
+            );
         }
     }, [apkVersionInfo]);
+
+    const startDownload = useCallback(async () => {
+        if (!apkVersionInfo) return;
+
+        try {
+            setDownloadProgress(0);
+            await updateService.downloadAndInstallAPK(
+                apkVersionInfo.download_url,
+                (progress) => setDownloadProgress(progress)
+            );
+            // Close modal after success (native intent will take over)
+            setTimeout(() => setShowDownloadModal(false), 1000);
+        } catch (err) {
+            setShowDownloadModal(false);
+            setError('Gagal mendownload update');
+        }
+    }, [apkVersionInfo]);
+
+    const cancelDownload = useCallback(() => {
+        // Note: Expo FileSystem download cancellation not implemented in this simple version
+        setShowDownloadModal(false);
+    }, []);
 
     useEffect(() => {
         if (autoCheck) {
@@ -104,5 +152,9 @@ export function useUpdateCheck(autoCheck: boolean = true): UseUpdateCheckResult 
         checkForUpdates,
         applyOTAUpdate,
         promptAPKDownload,
+        showDownloadModal,
+        downloadProgress,
+        startDownload,
+        cancelDownload,
     };
 }

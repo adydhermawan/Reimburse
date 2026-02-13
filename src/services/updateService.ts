@@ -1,4 +1,6 @@
 import * as Updates from 'expo-updates';
+import * as FileSystem from 'expo-file-system';
+import * as IntentLauncher from 'expo-intent-launcher';
 import { Alert, Linking, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import api from './api';
@@ -147,9 +149,48 @@ class UpdateService {
     }
 
     /**
+     * Download and install APK
+     */
+    async downloadAndInstallAPK(url: string, onProgress: (progress: number) => void): Promise<void> {
+        try {
+            if (Platform.OS !== 'android') {
+                Alert.alert('Error', 'Installasi APK hanya tersedia di Android');
+                return;
+            }
+
+            const downloadResumable = FileSystem.createDownloadResumable(
+                url,
+                FileSystem.documentDirectory + 'app-update.apk',
+                {},
+                (downloadProgress) => {
+                    const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+                    onProgress(progress);
+                }
+            );
+
+            const result = await downloadResumable.downloadAsync();
+
+            if (result && result.uri) {
+                const contentUri = await FileSystem.getContentUriAsync(result.uri);
+
+                await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+                    data: contentUri,
+                    flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
+                    type: 'application/vnd.android.package-archive',
+                });
+            }
+        } catch (error) {
+            console.error('[UpdateService] Failed to download/install APK:', error);
+            Alert.alert('Error', 'Gagal mendownload update. Silakan coba lagi.');
+            // Fallback to browser
+            this.openDownloadUrl(url);
+        }
+    }
+
+    /**
      * Open download URL in browser
      */
-    private openDownloadUrl(url: string): void {
+    public openDownloadUrl(url: string): void {
         if (Platform.OS === 'android') {
             Linking.openURL(url).catch((err) => {
                 console.error('[UpdateService] Failed to open download URL:', err);

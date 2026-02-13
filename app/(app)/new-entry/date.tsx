@@ -10,7 +10,13 @@ export default function DatePickerScreen() {
     const router = useRouter();
     const date = useNewEntryStore((state) => state.date);
     const setDate = useNewEntryStore((state) => state.setDate);
+    const setStep = useNewEntryStore((state) => state.setStep);
     const compressionStatus = useNewEntryStore((state) => state.compressionStatus);
+
+    // Track step
+    React.useEffect(() => {
+        setStep(2);
+    }, []);
 
     // Calendar Generation Logic
     const generateCalendar = (selectedDate: Date) => {

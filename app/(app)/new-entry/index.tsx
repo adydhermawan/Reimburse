@@ -82,6 +82,7 @@ export default function PhotoCaptureScreen() {
     const setCategory = useNewEntryStore((state) => state.setCategory);
     const reset = useNewEntryStore((state) => state.reset);
     const setGlobalCompressionStatus = useNewEntryStore((state) => state.setCompressionStatus);
+    const setStep = useNewEntryStore((state) => state.setStep);
     const checkHasDraft = useNewEntryStore((state) => state.checkHasDraft);
     const loadDraft = useNewEntryStore((state) => state.loadDraft);
     const clearDraft = useNewEntryStore((state) => state.clearDraft);
@@ -112,6 +113,9 @@ export default function PhotoCaptureScreen() {
                 setShowDraftModal(true);
             }
             setIsCheckingDraft(false);
+
+            // Set current step
+            setStep(1);
         };
 
         checkDraft();

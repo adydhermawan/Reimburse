@@ -51,8 +51,8 @@ const saveDraftDebounced = (() => {
         if (timeout) clearTimeout(timeout);
         timeout = setTimeout(() => {
             const state = getState();
-            // Only save if there's meaningful data
-            if (state.imageUri || state.category || state.client || state.amount) {
+            // Save draft whenever there's some progress or we're past the first step
+            if (state.imageUri || state.category || state.client || state.amount || state.step > 1) {
                 state.saveDraft();
             }
         }, 500); // 500ms debounce
@@ -200,15 +200,25 @@ export const useNewEntryStore = create<NewEntryState>((set, get) => ({
      * Restore state from draft object
      */
     restoreFromDraft: (draft: DraftEntry) => {
+        // Validate date - fallback to current date if invalid
+        let parsedDate = new Date();
+        if (draft.date) {
+            const tempDate = new Date(draft.date);
+            // Check if date is valid (not NaN)
+            if (!isNaN(tempDate.getTime())) {
+                parsedDate = tempDate;
+            }
+        }
+
         set({
-            step: draft.step,
+            step: draft.step || 1,
             imageUri: draft.imageUri,
-            date: new Date(draft.date),
-            category: draft.category,
+            date: parsedDate,
+            category: draft.category || '',
             categoryId: draft.categoryId,
-            client: draft.client,
-            amount: draft.amount,
-            note: draft.note,
+            client: draft.client || '',
+            amount: draft.amount || '',
+            note: draft.note || '',
             hasDraft: true,
         });
     },

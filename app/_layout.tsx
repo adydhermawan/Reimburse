@@ -7,6 +7,7 @@ import { useAuthStore } from '../store/authStore';
 import { colors } from '../src/constants/theme';
 import { SyncProvider } from '../src/components/SyncProvider';
 import { useUpdateCheck } from '../src/hooks/useUpdateCheck';
+import { UpdateProgressModal } from '../src/components/UpdateProgressModal';
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -47,7 +48,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
     // Auto-check for updates when app starts
     // The hook will automatically prompt user if update is available
-    useUpdateCheck(true);
+
+    const { showDownloadModal, downloadProgress } = useUpdateCheck(true);
 
     return (
         <SyncProvider>
@@ -72,6 +74,7 @@ export default function RootLayout() {
                     <Stack.Screen name="(app)" options={{ headerShown: false }} />
                 </Stack>
             </AuthProvider>
-        </SyncProvider>
+            <UpdateProgressModal visible={showDownloadModal} progress={downloadProgress} />
+        </SyncProvider >
     );
 }

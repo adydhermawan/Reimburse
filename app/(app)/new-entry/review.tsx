@@ -16,8 +16,22 @@ export default function ReviewScreen() {
     const { createReimbursement, isSubmitting, error } = useReimbursementStore();
     const { categories } = useCategoryStore();
     const { isOnline, addPendingSubmission } = useOfflineSyncStore();
+    const setStep = useNewEntryStore((state) => state.setStep);
     const [localError, setLocalError] = useState<string | null>(null);
     const [isSavingOffline, setIsSavingOffline] = useState(false);
+
+    // Track step
+    useEffect(() => {
+        setStep(6);
+    }, []);
+
+    // Helper to get a valid Date object from entry.date
+    const getValidDate = (): Date => {
+        if (entry.date && entry.date instanceof Date && !isNaN(entry.date.getTime())) {
+            return entry.date;
+        }
+        return new Date();
+    };
 
     // Find category ID from name
     const getCategoryId = (): number | null => {
@@ -25,9 +39,14 @@ export default function ReviewScreen() {
         if (entry.categoryId) {
             return entry.categoryId;
         }
-        // Fallback to looking up by name
-        const category = categories.find(c => c.name === entry.category);
-        return category?.id || null;
+
+        // If it's a known category name but missing ID, find it
+        if (entry.category) {
+            const category = categories.find(c => c.name === entry.category);
+            return category?.id || null;
+        }
+
+        return null;
     };
 
     const handleSubmit = async () => {
@@ -55,8 +74,9 @@ export default function ReviewScreen() {
             return;
         }
 
-        // Format date
-        const formattedDate = entry.date.toISOString().split('T')[0];
+        // Format date with validation
+        const validDate = getValidDate();
+        const formattedDate = validDate.toISOString().split('T')[0];
 
         // Prepare base data
         const baseData: any = {
@@ -72,6 +92,13 @@ export default function ReviewScreen() {
         } else {
             baseData.category_name = entry.category;
         }
+
+        console.log('[Review] Submitting reimbursement:', {
+            hasCategoryId: !!baseData.category_id,
+            category_id: baseData.category_id,
+            category_name: baseData.category_name,
+            client: baseData.client_name
+        });
 
         // Check if we're offline
         if (!isOnline) {
@@ -135,7 +162,7 @@ export default function ReviewScreen() {
         {
             icon: Calendar,
             label: 'TANGGAL',
-            value: entry.date.toLocaleDateString('id-ID', {
+            value: getValidDate().toLocaleDateString('id-ID', {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',

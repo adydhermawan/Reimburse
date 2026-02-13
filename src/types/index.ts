@@ -117,11 +117,12 @@ export interface ReimbursementFilters {
 // Create Reimbursement Request
 export interface CreateReimbursementRequest {
     client_name: string;
-    category_id: number;
+    category_id?: number;
+    category_name?: string;
     amount: number;
     transaction_date: string;
     note?: string;
-    image: {
+    image?: {
         uri: string;
         type: string;
         name: string;

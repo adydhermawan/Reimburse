@@ -8,12 +8,28 @@ import { useNewEntryStore } from '../../../store/newEntryStore';
 
 export default function AmountScreen() {
     const router = useRouter();
+    const entry = useNewEntryStore();
     const setAmount = useNewEntryStore((state) => state.setAmount);
     const setNote = useNewEntryStore((state) => state.setNote);
+    const setStep = useNewEntryStore((state) => state.setStep);
     const client = useNewEntryStore((state) => state.client);
 
-    const [displayAmount, setDisplayAmount] = useState('');
-    const [noteText, setNoteText] = useState('');
+    const [displayAmount, setDisplayAmount] = useState(entry.amount || '');
+    const [noteText, setNoteText] = useState(entry.note || '');
+
+    // Track step
+    React.useEffect(() => {
+        setStep(5);
+    }, []);
+
+    // Sync to store for draft persistence
+    React.useEffect(() => {
+        setAmount(displayAmount);
+    }, [displayAmount]);
+
+    React.useEffect(() => {
+        setNote(noteText);
+    }, [noteText]);
 
     const handleNumberPress = (num: string) => {
         if (displayAmount.length < 12) {
