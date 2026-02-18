@@ -9,13 +9,13 @@ module.exports = function withCustomGradleProperties(config) {
         const props = config.modResults;
 
         // Set JVM args for Gradle daemon
-        setProperty(props, 'org.gradle.jvmargs', '-Xmx3g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError');
+        setProperty(props, 'org.gradle.jvmargs', '-Xmx2g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError');
 
-        // Enable parallel builds
-        setProperty(props, 'org.gradle.parallel', 'true');
+        // Disable parallel builds to save memory
+        setProperty(props, 'org.gradle.parallel', 'false');
 
         // Use Kotlin daemon for faster compilation
-        setProperty(props, 'kotlin.daemon.jvmargs', '-Xmx2g');
+        setProperty(props, 'kotlin.daemon.jvmargs', '-Xmx1536m');
 
         return config;
     });

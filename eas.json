@@ -18,6 +18,9 @@
             "android": {
                 "buildType": "apk",
                 "image": "latest"
+            },
+            "ios": {
+                "simulator": false
             }
         },
         "production": {
