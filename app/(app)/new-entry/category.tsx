@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useGlobalSearchParams } from 'expo-router';
 import { ArrowLeft, Zap, Utensils, Coffee, Fuel, Car, Smartphone, MoreHorizontal, X, FileText } from 'lucide-react-native';
 import { ScreenWrapper, Button, Input } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
@@ -29,6 +29,7 @@ const defaultColors = [
 
 export default function CategoryScreen() {
     const router = useRouter();
+    const params = useGlobalSearchParams();
     const setCategory = useNewEntryStore((state) => state.setCategory);
     const setCategoryId = useNewEntryStore((state) => state.setCategoryId);
     const setStep = useNewEntryStore((state) => state.setStep);
@@ -49,7 +50,11 @@ export default function CategoryScreen() {
         Haptics.selectionAsync();
         setCategoryId(categoryId);
         setCategory(categoryName);
-        router.push('/(app)/new-entry/client');
+        if (params.from === 'review') {
+            router.back();
+        } else {
+            router.push('/(app)/new-entry/client');
+        }
     };
 
     const handleOtherSelect = () => {
@@ -63,7 +68,11 @@ export default function CategoryScreen() {
             setCategoryId(undefined);
             setCategory(customCategory.trim());
             setIsOtherModalVisible(false);
-            router.push('/(app)/new-entry/client');
+            if (params.from === 'review') {
+                router.back();
+            } else {
+                router.push('/(app)/new-entry/client');
+            }
         }
     };
 

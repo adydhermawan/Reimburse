@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useGlobalSearchParams } from 'expo-router';
 import { ArrowLeft, Delete } from 'lucide-react-native';
 import { ScreenWrapper, Button, Input } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
@@ -8,6 +8,7 @@ import { useNewEntryStore } from '../../../store/newEntryStore';
 
 export default function AmountScreen() {
     const router = useRouter();
+    const params = useGlobalSearchParams();
     const entry = useNewEntryStore();
     const setAmount = useNewEntryStore((state) => state.setAmount);
     const setNote = useNewEntryStore((state) => state.setNote);
@@ -54,7 +55,11 @@ export default function AmountScreen() {
         if (displayAmount && parseInt(displayAmount) > 0) {
             setAmount(displayAmount);
             setNote(noteText);
-            router.push('/(app)/new-entry/review');
+            if (params.from === 'review') {
+                router.back(); // Or explicit push to review if safer, but back is standard for "edit"
+            } else {
+                router.push('/(app)/new-entry/review');
+            }
         }
     };
 

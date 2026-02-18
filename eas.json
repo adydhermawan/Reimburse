@@ -12,6 +12,9 @@
         "preview": {
             "distribution": "internal",
             "channel": "preview",
+            "env": {
+                "EXPO_PUBLIC_API_URL": "https://recashly.dadi.web.id/api"
+            },
             "android": {
                 "buildType": "apk",
                 "image": "latest"
@@ -19,6 +22,9 @@
         },
         "production": {
             "channel": "production",
+            "env": {
+                "EXPO_PUBLIC_API_URL": "https://recashly.dadi.web.id/api"
+            },
             "android": {
                 "buildType": "apk",
                 "image": "latest"

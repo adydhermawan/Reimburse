@@ -168,6 +168,11 @@ export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
                 return null;
             }
         } catch (error: any) {
+            console.error('[CreateReimbursement] Error:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message,
+            });
             const errorMessage =
                 error.response?.data?.message ||
                 error.message ||

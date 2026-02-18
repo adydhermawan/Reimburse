@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useGlobalSearchParams } from 'expo-router';
 import { ArrowLeft, Edit3, ChevronLeft, ChevronRight, Zap } from 'lucide-react-native';
 import { ScreenWrapper, Button } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
@@ -8,6 +8,7 @@ import { useNewEntryStore } from '../../../store/newEntryStore';
 
 export default function DatePickerScreen() {
     const router = useRouter();
+    const params = useGlobalSearchParams();
     const date = useNewEntryStore((state) => state.date);
     const setDate = useNewEntryStore((state) => state.setDate);
     const setStep = useNewEntryStore((state) => state.setStep);
@@ -140,7 +141,13 @@ export default function DatePickerScreen() {
 
             <Button
                 label="Lanjutkan"
-                onPress={() => router.push('/(app)/new-entry/category')}
+                onPress={() => {
+                    if (params.from === 'review') {
+                        router.back();
+                    } else {
+                        router.push('/(app)/new-entry/category');
+                    }
+                }}
                 className="mb-4"
             />
         </ScreenWrapper>

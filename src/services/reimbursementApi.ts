@@ -83,6 +83,7 @@ export const reimbursementApi = {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
+                timeout: 120000, // 2 minutes for image upload to Cloudinary
             }
         );
         return response.data;
@@ -150,6 +151,28 @@ export const reimbursementApi = {
         // Remove /api from base URL for storage access
         const storageBaseUrl = API_BASE_URL.replace('/api', '');
         return `${storageBaseUrl}/storage/${imagePath}`;
+    },
+    /**
+     * Scan receipt image using AI
+     */
+    scanReceipt: async (imageUri: string): Promise<ApiResponse<any>> => {
+        const formData = new FormData();
+
+        // Append image
+        const filename = imageUri.split('/').pop() || 'receipt.jpg';
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+        // @ts-ignore
+        formData.append('image', { uri: imageUri, name: filename, type });
+
+        const response = await api.post<ApiResponse<any>>('/scan-receipt', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            timeout: 60000, // Longer timeout for AI processing
+        });
+        return response.data;
     },
 };
 

@@ -55,7 +55,7 @@ export default function TabLayout() {
                             <TouchableOpacity
                                 {...rest}
                                 delayLongPress={delayLongPress ?? undefined}
-                                onPress={() => router.push('/(app)/new-entry')}
+                                onPress={() => router.push('/(app)/new-entry/')}
                                 activeOpacity={0.7}
                             />
                         );

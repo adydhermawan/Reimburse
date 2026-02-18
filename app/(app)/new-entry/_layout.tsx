@@ -14,6 +14,7 @@ export default function NewEntryLayout() {
             <Stack.Screen name="category" />
             <Stack.Screen name="client" />
             <Stack.Screen name="amount" />
+            <Stack.Screen name="note" />
             <Stack.Screen name="review" />
         </Stack>
     );

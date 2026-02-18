@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Calendar, Tag, Building2, Wallet, FileText, Camera, CheckCircle, AlertCircle, WifiOff, Cloud } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Tag, Building2, Wallet, FileText, Camera, CheckCircle, AlertCircle, WifiOff, Cloud, Edit3 } from 'lucide-react-native';
 import { ScreenWrapper, Button } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
 import { useNewEntryStore } from '../../../store/newEntryStore';
@@ -40,9 +40,9 @@ export default function ReviewScreen() {
             return entry.categoryId;
         }
 
-        // If it's a known category name but missing ID, find it
+        // If it's a known category name but missing ID, find it (case-insensitive)
         if (entry.category) {
-            const category = categories.find(c => c.name === entry.category);
+            const category = categories.find(c => c.name.toLowerCase() === entry.category.toLowerCase());
             return category?.id || null;
         }
 
@@ -55,9 +55,9 @@ export default function ReviewScreen() {
 
         const categoryId = getCategoryId();
 
-        // Validate: either categoryId or category name must exist
-        if (!categoryId && !entry.category) {
-            setLocalError('Kategori harus diisi.');
+        // Validate: categoryId is required
+        if (!categoryId) {
+            setLocalError('Kategori tidak ditemukan. Silakan pilih ulang dari daftar.');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             return;
         }
@@ -86,12 +86,8 @@ export default function ReviewScreen() {
             note: entry.note || undefined,
         };
 
-        // Add category_id if available, otherwise use category_name
-        if (categoryId) {
-            baseData.category_id = categoryId;
-        } else {
-            baseData.category_name = entry.category;
-        }
+        // Always send category_id (compatible with production backend)
+        baseData.category_id = categoryId;
 
         console.log('[Review] Submitting reimbursement:', {
             hasCategoryId: !!baseData.category_id,
@@ -162,6 +158,7 @@ export default function ReviewScreen() {
         {
             icon: Calendar,
             label: 'TANGGAL',
+            route: '/(app)/new-entry/date?from=review',
             value: getValidDate().toLocaleDateString('id-ID', {
                 weekday: 'long',
                 day: 'numeric',
@@ -169,8 +166,8 @@ export default function ReviewScreen() {
                 year: 'numeric'
             })
         },
-        { icon: Tag, label: 'KATEGORI', value: entry.category || '-' },
-        { icon: Building2, label: 'CLIENT', value: entry.client || '-' },
+        { icon: Tag, label: 'KATEGORI', route: '/(app)/new-entry/category?from=review', value: entry.category || '-' },
+        { icon: Building2, label: 'CLIENT', route: '/(app)/new-entry/client?from=review', value: entry.client || '-' },
     ];
 
     return (
@@ -210,34 +207,56 @@ export default function ReviewScreen() {
                 )}
 
                 {reviewItems.map((item, index) => (
-                    <View key={index} className="bg-surface p-4 rounded-2xl border border-white/5 mb-3">
-                        <View className="flex-row items-center mb-2">
-                            <item.icon size={16} color={colors.textSecondary} />
-                            <Text className="text-text-secondary text-xs ml-2 font-medium">{item.label}</Text>
+                    <TouchableOpacity
+                        key={index}
+                        onPress={() => router.push(item.route as any)}
+                        activeOpacity={0.7}
+                        className="bg-surface p-4 rounded-2xl border border-white/5 mb-3"
+                    >
+                        <View className="flex-row items-center mb-2 justify-between">
+                            <View className="flex-row items-center">
+                                <item.icon size={16} color={colors.textSecondary} />
+                                <Text className="text-text-secondary text-xs ml-2 font-medium">{item.label}</Text>
+                            </View>
+                            <Edit3 size={14} color={colors.primary} />
                         </View>
                         <Text className="text-white font-bold text-lg">{item.value}</Text>
-                    </View>
+                    </TouchableOpacity>
                 ))}
 
                 {/* Amount Card - Highlighted */}
-                <View className="bg-surface p-4 rounded-2xl border border-white/5 mb-3">
-                    <View className="flex-row items-center mb-2">
-                        <Wallet size={16} color={colors.textSecondary} />
-                        <Text className="text-text-secondary text-xs ml-2 font-medium">JUMLAH</Text>
+                <TouchableOpacity
+                    onPress={() => router.push('/(app)/new-entry/amount?from=review')}
+                    activeOpacity={0.7}
+                    className="bg-surface p-4 rounded-2xl border border-white/5 mb-3"
+                >
+                    <View className="flex-row items-center mb-2 justify-between">
+                        <View className="flex-row items-center">
+                            <Wallet size={16} color={colors.textSecondary} />
+                            <Text className="text-text-secondary text-xs ml-2 font-medium">JUMLAH</Text>
+                        </View>
+                        <Edit3 size={14} color={colors.primary} />
                     </View>
                     <Text className="text-primary font-bold text-2xl">
                         Rp {new Intl.NumberFormat('id-ID').format(parseInt(entry.amount || '0'))}
                     </Text>
-                </View>
+                </TouchableOpacity>
 
                 {entry.note && (
-                    <View className="bg-surface p-4 rounded-2xl border border-white/5 mb-3">
-                        <View className="flex-row items-center mb-2">
-                            <FileText size={16} color={colors.textSecondary} />
-                            <Text className="text-text-secondary text-xs ml-2 font-medium">CATATAN</Text>
+                    <TouchableOpacity
+                        onPress={() => router.push('/(app)/new-entry/note')}
+                        activeOpacity={0.7}
+                        className="bg-surface p-4 rounded-2xl border border-white/5 mb-3"
+                    >
+                        <View className="flex-row items-center mb-2 justify-between">
+                            <View className="flex-row items-center">
+                                <FileText size={16} color={colors.textSecondary} />
+                                <Text className="text-text-secondary text-xs ml-2 font-medium">CATATAN</Text>
+                            </View>
+                            <Edit3 size={14} color={colors.primary} />
                         </View>
                         <Text className="text-white">{entry.note}</Text>
-                    </View>
+                    </TouchableOpacity>
                 )}
 
                 {/* Image Card */}

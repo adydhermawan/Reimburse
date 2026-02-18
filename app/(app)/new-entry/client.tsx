@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useGlobalSearchParams } from 'expo-router';
 import { ArrowLeft, Search, Plus, Building2, CheckCircle2 } from 'lucide-react-native';
 import { ScreenWrapper, Input } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 
 export default function ClientScreen() {
     const router = useRouter();
+    const params = useGlobalSearchParams();
     const setClient = useNewEntryStore((state) => state.setClient);
     const setStep = useNewEntryStore((state) => state.setStep);
     const compressionStatus = useNewEntryStore((state) => state.compressionStatus);
@@ -43,7 +44,11 @@ export default function ClientScreen() {
     const handleSelect = (name: string) => {
         Haptics.selectionAsync();
         setClient(name);
-        router.push('/(app)/new-entry/amount');
+        if (params.from === 'review') {
+            router.back();
+        } else {
+            router.push('/(app)/new-entry/amount');
+        }
     };
 
     const handleCreateAndSelect = async () => {
@@ -55,7 +60,11 @@ export default function ClientScreen() {
         if (newClient) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setClient(newClient.name);
-            router.push('/(app)/new-entry/amount');
+            if (params.from === 'review') {
+                router.back();
+            } else {
+                router.push('/(app)/new-entry/amount');
+            }
         }
     };
 
