@@ -9,7 +9,7 @@ module.exports = function withCustomGradleProperties(config) {
         const props = config.modResults;
 
         // Set JVM args for Gradle daemon
-        setProperty(props, 'org.gradle.jvmargs', '-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError');
+        setProperty(props, 'org.gradle.jvmargs', '-Xmx3g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError');
 
         // Enable parallel builds
         setProperty(props, 'org.gradle.parallel', 'true');

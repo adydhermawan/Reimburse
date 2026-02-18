@@ -32,7 +32,7 @@ export const reportApi = {
         const token = await getToken();
         const downloadUrl = `${API_BASE_URL}/reports/${id}/download`;
 
-        const fileUri = `${FileSystem.documentDirectory}${filename || `Reimburse_Report_${id}.pdf`}`;
+        const fileUri = `${(FileSystem as any).documentDirectory || ''}${filename || `Reimburse_Report_${id}.pdf`}`;
 
         const downloadResult = await FileSystem.downloadAsync(
             downloadUrl,

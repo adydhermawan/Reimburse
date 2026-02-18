@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Alert } from 'react-native';
 import { updateService, AppVersionInfo } from '../services/updateService';
 
 interface UseUpdateCheckResult {

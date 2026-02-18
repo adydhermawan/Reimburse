@@ -160,7 +160,7 @@ class UpdateService {
 
             const downloadResumable = FileSystem.createDownloadResumable(
                 url,
-                FileSystem.documentDirectory + 'app-update.apk',
+                ((FileSystem as any).documentDirectory || '') + 'app-update.apk',
                 {},
                 (downloadProgress) => {
                     const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;

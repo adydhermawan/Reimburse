@@ -12,6 +12,20 @@ import {
     ReimbursementFilters
 } from '../types';
 
+export interface CreateReimbursementRequest {
+    client_name: string;
+    category_id?: number | null;
+    category_name?: string | null;
+    amount: number;
+    transaction_date: string;
+    note?: string;
+    image?: { // Made image optional as it's not always present in partial updates
+        uri: string;
+        type: string;
+        name: string;
+    };
+}
+
 export const reimbursementApi = {
     /**
      * Get reimbursements list with pagination and filters

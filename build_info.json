@@ -1,0 +1,53 @@
+{
+  "id": "d06d7a79-b5ce-4504-a26b-170023c5ba42",
+  "status": "ERRORED",
+  "platform": "ANDROID",
+  "error": {
+    "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+    "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+  },
+  "artifacts": {},
+  "fingerprint": {
+    "id": "019c6fc0-a7d1-7619-9447-3f1b7e828422",
+    "hash": "bf7521112d57b7c18003a7f852f90efbabff23af"
+  },
+  "initiatingActor": {
+    "id": "07d03b8a-d837-4f81-a350-5f1752a68bec",
+    "displayName": "adydhermawan"
+  },
+  "logFiles": [
+    "https://job-logs.eascdn.net/production/d06d7a79-b5ce-4504-a26b-170023c5ba42/1771401423172-c013d3bb-03e5-4b94-bd51-c02608016695.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260218%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260218T134356Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=19e89dbcda03d118f3d18a337c573014fa4ca5786d0e4f139edae36a46fd5f7da6f853b73253b99147861e192cf9122f535da299e6bdb7ff3a29757a1ddcf57a793aa5dfb0809175bfda0bb3a57b8cefddc89d7c77abad5f059b17e9a7a501672ffe3b00ed5ca79f5655b693e3093d907f5ca4a16ca40521070ead7b966828b6b23d762cd0701a0286325e008dbd1627666fde63f790c587064f202ffcfcb4758bbc9bebf1cac5bf8624db6b853b02563dc6b40ae6683d1bd2dbb3eb0c283a99d5421c87206ec48015d8711436a1c7da6f61c8316d25fa7f265756d485dac1f48c94f839c9d830387cffc48457e7ae7864dfdfce3ab32065d6b95aad6840f654",
+    "https://job-logs.eascdn.net/production/d06d7a79-b5ce-4504-a26b-170023c5ba42/1771401425141-4154919a-0cb5-4275-bc86-a90b221028ce.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260218%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260218T134356Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=8ebbbcc54a27fa616e0722e6a1e30ec701baafca2e472dfcec87faee05e63eec25b34b0fdcbb2f1177f4a0a434feee165c1aaf29317d5d4436ac1126324c765e6466e7a59de934d93ad72e48633f57384cbe7d914beafd2cf9f1c032a3138b4215ee8c1cf82c80f318c7c77cde65c55c5d4eff6bf038871241ab525009b0f7aee9aeaba5bcc7ee56f2b8620b7e1927908af16c3bb67225018db2936f3a6e7a573cbb2a8950fdec12cda618ad86ca341b03ad14356556072cd263bd67c91c2e71d2e2a144a7b4ce5e299da03bfc05dd556f3d0ff70baf1b3533938682b1c673ee5942e27d00dd5f1a107fd30296b54f49e9496f11895a5d3a9de7a1ebafb07f3e",
+    "https://job-logs.eascdn.net/production/d06d7a79-b5ce-4504-a26b-170023c5ba42/1771401425341-9a211eb8-c382-459e-be29-0e2d432c5667.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260218%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260218T134356Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=b7cb8f746337b9c6da156ae07769e5d11aaf6feaa908a97a2fdfe742453c5ceb607a7a0bc2cf89d399a5d578f27c3ce49cdd164d490ed4a6c53435577d0af78e030b600bcc3eb0278f0d20ee914b31e0ba6473071ab15b31cc8c90f9772140472065968e9f5dd05745c48a701e5307a3c6ea21be7c4eac2ae14eddbd8e97acea3ac1a34da88a844bcfce2c66d9d15c091076e101a4918d60e263af80c97acb3285fa539bc0b5f4231ae2e308c00a3b2aa2bfbfd887aef68cf3c54755af43846197e07e495a347a86f9334b956da73cb5b8186f07d3f82054d4945a9c5e3aff3d1916f1a6444e5516896f92145d84cf4a911da11e21d90bb0271513dc2f68cdb3",
+    "https://job-logs.eascdn.net/production/d06d7a79-b5ce-4504-a26b-170023c5ba42/1771401425520-aee82789-525f-43d1-a347-95338b857519.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260218%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260218T134356Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=43572cec8ec5fe2711fff5e4868bede846be9f1a4668ae35cacb7a8b0f2df2293984dd48be2639d21972e3d0bdc830097caf2a4b6ad6a5f0f24960b9198670df32ed33229e3593d44d2580e61d43e2aa39cdcc140bfa4b3d13213c80df9fedbfb870319be93387aa03f45923999fc946467da276a50eb8d6576c7870997aa19fc01e27b57a03f4654e7d40aa4086ef7cd473968878329b30fd45ad4c45687e825be38d8f15f1161bbe51af1ce2956898fba7c255c7be862916311bb2a1495fbb635fe1e5a6776af6b410aa20ca864f6ad9f2f0133f65f4488ae49294ee423618393a531c3731c01a064cce3d05983de7f042f52b4b45f985fa0c98775b3218d9"
+  ],
+  "project": {
+    "id": "83ac70ce-b532-4c7d-938d-e8b49b2995e5",
+    "name": "Recashly",
+    "slug": "Recashly",
+    "ownerAccount": {
+      "id": "895f243e-4c37-4198-87e9-2677ab873ced",
+      "name": "adydhermawan"
+    }
+  },
+  "channel": "preview",
+  "distribution": "INTERNAL",
+  "buildProfile": "preview",
+  "sdkVersion": "54.0.0",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "1",
+  "runtimeVersion": "1.0.0",
+  "gitCommitHash": "c388d24097595e578efffd025af299ab5939a955",
+  "gitCommitMessage": "fix: add Gradle JVM memory config plugin to fix KSP OOM",
+  "priority": "NORMAL",
+  "createdAt": "2026-02-18T07:57:02.732Z",
+  "updatedAt": "2026-02-18T08:01:11.057Z",
+  "completedAt": "2026-02-18T08:00:59.443Z",
+  "expirationDate": "2026-03-04T07:57:02.786Z",
+  "isForIosSimulator": false,
+  "metrics": {
+    "buildWaitTime": 296,
+    "buildQueueTime": 41045,
+    "buildDuration": 195102
+  }
+}
