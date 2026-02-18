@@ -17,7 +17,8 @@
             },
             "android": {
                 "buildType": "apk",
-                "image": "latest"
+                "image": "latest",
+                "resourceClass": "large"
             }
         },
         "production": {

@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -47,8 +47,12 @@
         "expo-build-properties",
         {
           "android": {
-            "kotlinVersion": "2.1.0",
-            "extraProguardRules": "-keep class expo.modules.** { *; }"
+            "kotlinVersion": "2.0.21",
+            "packagingOptions": {
+              "pickFirst": [
+                "**/libc++_shared.so"
+              ]
+            }
           }
         }
       ],
