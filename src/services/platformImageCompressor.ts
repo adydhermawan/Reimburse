@@ -26,7 +26,11 @@ async function compressImageWeb(
 ): Promise<{ uri: string; finalSize: number }> {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'anonymous';
+        // Remove strict crossOrigin requirement as it breaks local blob/data URIs
+        // Only set it if it's an external http url
+        if (uri.startsWith('http')) {
+            img.crossOrigin = 'anonymous';
+        }
 
         img.onload = async () => {
             try {
@@ -43,12 +47,15 @@ async function compressImageWeb(
                 const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
-                const ctx = canvas.getContext('2d')!;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) throw new Error('Could not get canvas context');
+
                 ctx.drawImage(img, 0, 0, width, height);
 
                 // Iteratively compress
                 let quality = 0.8;
-                let blob: Blob | null = null;
+                let finalDataUrl = '';
+                let finalSize = 0;
 
                 for (let i = 0; i < MAX_ITERATIONS; i++) {
                     onProgress?.({
@@ -57,29 +64,32 @@ async function compressImageWeb(
                         maxIterations: MAX_ITERATIONS,
                     });
 
-                    blob = await new Promise<Blob | null>((res) =>
-                        canvas.toBlob(res, 'image/jpeg', quality)
-                    );
+                    // We use toDataURL instead of toBlob because it's more reliable synchronously on some older Web views
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
 
-                    if (!blob) {
-                        throw new Error('Canvas toBlob failed');
-                    }
+                    // Approximate size calculation for base64
+                    const base64Length = dataUrl.length - (dataUrl.indexOf(',') + 1);
+                    const padding = (dataUrl.charAt(dataUrl.length - 2) === '=') ? 2 : ((dataUrl.charAt(dataUrl.length - 1) === '=') ? 1 : 0);
+                    const size = (base64Length * 0.75) - padding;
+
+                    finalDataUrl = dataUrl;
+                    finalSize = size;
 
                     onProgress?.({
                         step: 'compressing',
                         iteration: i + 1,
                         maxIterations: MAX_ITERATIONS,
-                        currentSize: blob.size,
+                        currentSize: size,
                         targetSize: TARGET_SIZE,
                     });
 
-                    if (blob.size <= TARGET_SIZE) break;
+                    if (size <= TARGET_SIZE) break;
 
-                    quality -= 0.1;
+                    quality -= 0.15; // Faster degradation
                     if (quality < 0.1) quality = 0.1;
 
-                    // Also reduce dimensions if still too large
-                    if (i >= 2 && blob.size > TARGET_SIZE) {
+                    // Also reduce dimensions if still too large on 3rd attempt
+                    if (i >= 2 && size > TARGET_SIZE) {
                         const shrink = 0.8;
                         canvas.width = Math.round(canvas.width * shrink);
                         canvas.height = Math.round(canvas.height * shrink);
@@ -87,18 +97,20 @@ async function compressImageWeb(
                     }
                 }
 
-                if (!blob) throw new Error('Compression produced no blob');
+                if (!finalDataUrl) throw new Error('Compression produced no image data');
 
-                const compressedUri = URL.createObjectURL(blob);
                 onProgress?.({ step: 'done' });
-
-                resolve({ uri: compressedUri, finalSize: blob.size });
+                resolve({ uri: finalDataUrl, finalSize });
             } catch (err) {
+                console.error("Web Compression Error:", err);
                 reject(err);
             }
         };
 
-        img.onerror = () => reject(new Error('Failed to load image for compression'));
+        img.onerror = () => {
+            console.error("Failed to load image into canvas helper", uri.substring(0, 100));
+            reject(new Error('Failed to load image for compression'));
+        };
         img.src = uri;
     });
 }
