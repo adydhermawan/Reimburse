@@ -215,11 +215,12 @@ export default function EntryDetailScreen() {
                             <Text className="text-text-secondary text-xs ml-2">FOTO STRUK</Text>
                         </View>
                         {imageUrl ? (
-                            <View className="w-full h-48 rounded-xl overflow-hidden bg-surface-elevated relative">
+                            <View className="w-full rounded-xl overflow-hidden bg-surface-elevated relative" style={{ minHeight: 300 }}>
                                 <Image
                                     source={{ uri: imageUrl }}
-                                    className="w-full h-full"
-                                    resizeMode="cover"
+                                    className="w-full"
+                                    style={{ minHeight: 300, height: 'auto', aspectRatio: 3 / 4 }}
+                                    resizeMode="contain"
                                     onLoadEnd={() => setImageLoading(false)}
                                     onError={() => setImageLoading(false)}
                                 />
