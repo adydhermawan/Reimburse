@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand';
-import { authApi, getToken, removeToken, getUserData, setUserData, removeUserData } from '../src/services';
+import { authApi, getToken, setToken, removeToken, getUserData, setUserData, removeUserData } from '../src/services';
 import { User } from '../src/types';
 
 interface AuthState {
@@ -113,6 +113,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const response = await authApi.login(email, password);
 
             if (response.success) {
+                // Persist token and user data to storage (localStorage on web, SecureStore on native)
+                await setToken(response.data.token);
+                await setUserData(response.data.user);
+
                 set({
                     isAuthenticated: true,
                     user: response.data.user,
@@ -165,6 +169,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const response = await authApi.register(name, email, password, passwordConfirmation);
 
             if (response.success) {
+                // Persist token and user data to storage
+                await setToken(response.data.token);
+                await setUserData(response.data.user);
+
                 set({
                     isAuthenticated: true,
                     user: response.data.user,
