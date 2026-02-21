@@ -9,11 +9,13 @@ import { useNewEntryStore } from '../../../store/newEntryStore';
 import { useCategoryStore } from '../../../store/categoryStore';
 import reimbursementApi from '../../../src/services/reimbursementApi';
 import * as Haptics from '../../../src/services/platformHaptics';
+import { compressImage, CompressionProgress } from '../../../src/services/platformImageCompressor';
 
 export default function ScanScreen() {
     const router = useRouter();
     const {
         setImageUri,
+        setImageFile,
         setAmount,
         setDate,
         setClient,
@@ -28,6 +30,8 @@ export default function ScanScreen() {
     const [image, setImage] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | undefined>(undefined);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+    const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
 
     // Set step for progress indicator and ensure categories are loaded
     React.useEffect(() => {
@@ -74,7 +78,34 @@ export default function ScanScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         try {
-            const response = await reimbursementApi.scanReceipt(image, imageFile);
+            // Compress image before sending to AI to speed up the upload
+            setCompressionStatus('Mengoptimalkan ukuran struk...');
+            let finalImageUri = image;
+            let finalImageFile = imageFile;
+
+            try {
+                const compressed = await compressImage(image, (progress) => {
+                    if (progress.step === 'compressing') {
+                        setCompressionStatus('Mengkompresi gambar...');
+                    }
+                });
+                finalImageUri = compressed.uri;
+                // If we compressed it, the native file object is no longer valid for the new URI natively, 
+                // but Expo will generate a new URI and Web blob handlers will work correctly
+                if (Platform.OS === 'web') {
+                    // Fetch new blob to recreate File
+                    const res = await fetch(compressed.uri);
+                    const blob = await res.blob();
+                    finalImageFile = new File([blob], imageFile?.name || 'receipt.jpg', { type: blob.type });
+                } else {
+                    finalImageFile = undefined;
+                }
+            } catch (err) {
+                console.error("Compression failed before AI scan, using original", err);
+            }
+
+            setCompressionStatus('Menganalisa data struk lewat AI...');
+            const response = await reimbursementApi.scanReceipt(finalImageUri, finalImageFile);
 
             if (response.success && response.data) {
                 const data = response.data;
@@ -82,6 +113,7 @@ export default function ScanScreen() {
 
                 // Update store with extracted data
                 setImageUri(image);
+                if (imageFile) setImageFile(imageFile);
 
                 if (data.total_amount) setAmount(data.total_amount.toString());
                 if (data.transaction_date) setDate(new Date(data.transaction_date));
@@ -171,7 +203,7 @@ export default function ScanScreen() {
                                 {isAnalyzing && (
                                     <View className="absolute inset-0 bg-black/60 items-center justify-center">
                                         <ActivityIndicator size="large" color={colors.primary} />
-                                        <Text className="text-white font-bold mt-4 text-lg">Menganalisa Struk...</Text>
+                                        <Text className="text-white font-bold mt-4 text-lg">{compressionStatus || 'Menganalisa Struk...'}</Text>
                                         <Text className="text-primary text-sm mt-1">Estimasi: 5-10 detik</Text>
                                     </View>
                                 )}

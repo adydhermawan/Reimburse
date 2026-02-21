@@ -153,6 +153,7 @@ export default function ReviewScreen() {
         const result = await createReimbursement({
             ...baseData,
             image: imageData,
+            imageFile: entry.imageFile,
         });
 
         if (result) {

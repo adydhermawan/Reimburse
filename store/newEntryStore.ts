@@ -14,6 +14,7 @@ import {
 interface NewEntryState {
     step: number;
     imageUri: string | null;
+    imageFile?: File;
     date: Date;
     category: string;
     categoryId: number | undefined;
@@ -27,6 +28,7 @@ interface NewEntryState {
     // Actions
     setStep: (step: number) => void;
     setImageUri: (uri: string | null) => void;
+    setImageFile: (file?: File) => void;
     setDate: (date: Date) => void;
     setCategory: (category: string) => void;
     setCategoryId: (categoryId: number | undefined) => void;
@@ -62,6 +64,7 @@ const saveDraftDebounced = (() => {
 export const useNewEntryStore = create<NewEntryState>((set, get) => ({
     step: 1,
     imageUri: null,
+    imageFile: undefined,
     date: new Date(),
     category: '',
     categoryId: undefined,
@@ -79,6 +82,10 @@ export const useNewEntryStore = create<NewEntryState>((set, get) => ({
     setImageUri: (imageUri) => {
         set({ imageUri });
         saveDraftDebounced(get);
+    },
+    setImageFile: (imageFile) => {
+        set({ imageFile });
+        // Don't save imageFile to Draft as it's a binary object and can't be easily serialized
     },
     setDate: (date) => {
         set({ date });
@@ -110,6 +117,7 @@ export const useNewEntryStore = create<NewEntryState>((set, get) => ({
         set({
             step: 1,
             imageUri: null,
+            imageFile: undefined,
             date: new Date(),
             category: '',
             categoryId: undefined,

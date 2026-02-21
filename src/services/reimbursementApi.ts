@@ -38,17 +38,27 @@ function appendImageToFormData(formData: FormData, fieldName: string, image: { u
         if (imageFile) {
             // We have a real File object (from platformImagePicker)
             formData.append(fieldName, imageFile, imageFile.name);
-        } else if (image.uri.startsWith('blob:')) {
-            // Convert blob URI to File — but we need to fetch it first
-            // This is handled asynchronously in the calling function
-            // Fallback: append as-is (shouldn't normally reach here)
-            formData.append(fieldName, image.uri);
+        } else if (image.uri.startsWith('data:')) {
+            // Convert Base64 Data URI to Blob robustly
+            const arr = image.uri.split(',');
+            const mime = arr[0].match(/:(.*?);/)?.[1] || image.type;
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            const blob = new Blob([u8arr], { type: mime });
+            formData.append(fieldName, blob, image.name);
         } else {
             // Data URI or similar — convert to blob
             fetch(image.uri)
                 .then(r => r.blob())
                 .then(blob => {
                     formData.append(fieldName, blob, image.name);
+                }).catch(err => {
+                    console.error("Failed to fetch blob URI, appending as string fallback", err);
+                    formData.append(fieldName, image.uri);
                 });
         }
     } else {
@@ -68,11 +78,28 @@ async function appendImageToFormDataAsync(formData: FormData, fieldName: string,
     if (Platform.OS === 'web') {
         if (imageFile) {
             formData.append(fieldName, imageFile, imageFile.name);
-        } else {
-            // Fetch the blob URI and convert to a File/Blob
-            const response = await fetch(image.uri);
-            const blob = await response.blob();
+        } else if (image.uri.startsWith('data:')) {
+            // Convert Base64 Data URI to Blob robustly
+            const arr = image.uri.split(',');
+            const mime = arr[0].match(/:(.*?);/)?.[1] || image.type;
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            const blob = new Blob([u8arr], { type: mime });
             formData.append(fieldName, blob, image.name);
+        } else {
+            // Fetch the blob URI and convert to a File/Blob (for blob:http://... URIs)
+            try {
+                const response = await fetch(image.uri);
+                const blob = await response.blob();
+                formData.append(fieldName, blob, image.name);
+            } catch (err) {
+                console.error("Failed to fetch blob URI, appending as string fallback", err);
+                formData.append(fieldName, image.uri);
+            }
         }
     } else {
         formData.append(fieldName, {

@@ -24,6 +24,7 @@ export default function PhotoCaptureScreen() {
     const { categoryId, categoryName } = useLocalSearchParams<{ categoryId?: string; categoryName?: string }>();
 
     const setImageUri = useNewEntryStore((state) => state.setImageUri);
+    const setImageFile = useNewEntryStore((state) => state.setImageFile);
     const setCategory = useNewEntryStore((state) => state.setCategory);
     const reset = useNewEntryStore((state) => state.reset);
     const setGlobalCompressionStatus = useNewEntryStore((state) => state.setCompressionStatus);
@@ -40,6 +41,7 @@ export default function PhotoCaptureScreen() {
     const [cameraReady, setCameraReady] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+    const [capturedFile, setCapturedFile] = useState<File | undefined>(undefined);
     const [facing, setFacing] = useState<'front' | 'back'>('back');
     const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
     const cameraRef = useRef<any>(null);
@@ -124,6 +126,7 @@ export default function PhotoCaptureScreen() {
 
                 if (!result.canceled && result.assets[0]) {
                     setCapturedPhoto(result.assets[0].uri);
+                    setCapturedFile(result.assets[0].file);
                 }
             } catch (error) {
                 console.error('Error taking photo:', error);
@@ -148,6 +151,7 @@ export default function PhotoCaptureScreen() {
 
             if (photo?.uri) {
                 setCapturedPhoto(photo.uri);
+                // Native camera doesn't produce web File objects, but `compressImage` handles uri just fine.
             }
         } catch (error) {
             console.error('Error taking photo:', error);
@@ -169,6 +173,7 @@ export default function PhotoCaptureScreen() {
                 setIsProcessing(true);
                 Haptics.selectionAsync();
                 setCapturedPhoto(result.assets[0].uri);
+                setCapturedFile(result.assets[0].file);
             }
         } catch (error) {
             console.error('Error picking image:', error);
@@ -210,6 +215,8 @@ export default function PhotoCaptureScreen() {
             });
 
             setImageUri(result.uri);
+            if (capturedFile) setImageFile(capturedFile);
+
             await new Promise(resolve => setTimeout(resolve, 1500));
             setGlobalCompressionStatus(null);
         } catch (error) {
