@@ -220,8 +220,8 @@ export default function EntryDetailScreen() {
                                     source={{ uri: imageUrl }}
                                     className="w-full h-full"
                                     resizeMode="cover"
-                                    onLoadStart={() => setImageLoading(true)}
                                     onLoadEnd={() => setImageLoading(false)}
+                                    onError={() => setImageLoading(false)}
                                 />
                                 {imageLoading && (
                                     <View className="absolute inset-0 bg-surface-elevated items-center justify-center">
