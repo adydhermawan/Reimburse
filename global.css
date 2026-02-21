@@ -60,3 +60,22 @@
         -webkit-tap-highlight-color: transparent;
     }
 }
+
+/* PWA Standalone: iPhone safe area handling for bottom rounded corners */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    @media (display-mode: standalone) {
+
+        /* Add safe area padding to the bottom tab bar container */
+        [role="tabbar"],
+        nav,
+        .react-navigation-tabbar,
+        div[style*="bottom: 0"] {
+            padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        }
+
+        /* Ensure the root element respects safe areas */
+        #root {
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+    }
+}

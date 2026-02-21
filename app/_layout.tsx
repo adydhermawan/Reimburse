@@ -38,6 +38,12 @@ function usePWAInit() {
             }
         });
 
+        // Ensure viewport-fit=cover for safe-area-inset support on iPhone
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport && !viewport.getAttribute('content')?.includes('viewport-fit')) {
+            viewport.setAttribute('content', viewport.getAttribute('content') + ', viewport-fit=cover');
+        }
+
         // Apple touch icon
         if (!document.querySelector('link[rel="apple-touch-icon"]')) {
             const icon = document.createElement('link');
