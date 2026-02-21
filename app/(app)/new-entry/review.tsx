@@ -124,11 +124,24 @@ export default function ReviewScreen() {
         // Prepare image for upload
         let imageData = undefined;
         if (entry.imageUri) {
-            // Extract filename from URI
-            const uriParts = entry.imageUri.split('/');
-            const filename = uriParts[uriParts.length - 1];
-            const fileExtension = filename.split('.').pop()?.toLowerCase() || 'jpg';
-            const mimeType = fileExtension === 'png' ? 'image/png' : 'image/jpeg';
+            let filename = `receipt_${Date.now()}.jpg`;
+            let mimeType = 'image/jpeg';
+
+            // Prevent base64 data URIs from being split incorrectly as they contain slashes
+            if (!entry.imageUri.startsWith('data:')) {
+                const uriParts = entry.imageUri.split('/');
+                const extractedName = uriParts[uriParts.length - 1];
+
+                // Only use the extracted name if it seems like a valid filename with an extension
+                if (extractedName && extractedName.includes('.') && extractedName.length < 100) {
+                    filename = extractedName;
+                    const ext = filename.split('.').pop()?.toLowerCase();
+                    if (ext === 'png') mimeType = 'image/png';
+                }
+            } else if (entry.imageUri.includes('image/png')) {
+                mimeType = 'image/png';
+                filename = `receipt_${Date.now()}.png`;
+            }
 
             imageData = {
                 uri: entry.imageUri,
