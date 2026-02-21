@@ -34,10 +34,10 @@ export default function EditEntryScreen() {
     const [amount, setAmount] = useState('');
     const [note, setNote] = useState('');
 
-    // Fetch entry from API if not in store
+    // Fetch entry from API if not in store, or missing image_path
     useEffect(() => {
         fetchCategories();
-        if (!entry && numericId) {
+        if ((!entry || !entry.image_path) && numericId) {
             setIsLoading(true);
             fetchReimbursementById(numericId).then((fetchedEntry) => {
                 setEntry(fetchedEntry);
@@ -224,8 +224,8 @@ export default function EditEntryScreen() {
                                         setCategoryId(cat.id);
                                     }}
                                     className={`px-3 py-2 rounded-lg border ${categoryId === cat.id
-                                            ? 'bg-primary border-primary'
-                                            : 'bg-surface-elevated border-white/10'
+                                        ? 'bg-primary border-primary'
+                                        : 'bg-surface-elevated border-white/10'
                                         }`}
                                 >
                                     <Text className={`text-sm font-medium ${categoryId === cat.id ? 'text-background' : 'text-white'

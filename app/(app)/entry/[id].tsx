@@ -35,9 +35,9 @@ export default function EntryDetailScreen() {
     // Local state for entry
     const [entry, setEntry] = useState<Reimbursement | null | undefined>(() => getEntryById(numericId));
 
-    // Fetch from API if not in store
+    // Fetch from API if not in store, or if it's missing image_path (due to list optimization)
     useEffect(() => {
-        if (!entry && numericId) {
+        if ((!entry || !entry.image_path) && numericId) {
             setIsLoading(true);
             fetchReimbursementById(numericId).then((fetchedEntry) => {
                 setEntry(fetchedEntry);

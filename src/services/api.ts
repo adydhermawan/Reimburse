@@ -104,7 +104,11 @@ api.interceptors.response.use(
 
         if (!error.response) {
             // Network Error or Server Down
-            message = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda atau pastikan server berjalan.';
+            if (error.code === 'ERR_NETWORK') {
+                message = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.';
+            } else {
+                message = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda atau pastikan server berjalan.';
+            }
             console.error('Network/Server Error:', error.message);
         } else {
             // Server responded with error status
@@ -116,7 +120,12 @@ api.interceptors.response.use(
                 message = 'Sesi Anda telah berakhir. Silakan login kembali.';
             } else if (status === 404) {
                 message = 'Data tidak ditemukan.';
+            } else if (status === 422) {
+                // Validation error
+                message = error.response.data?.message || 'Data yang dimasukkan tidak valid.';
             } else if (status >= 500) {
+                // If backend throws 500, dump the exact server response for debugging production!
+                console.error('\n\n=== SERVER 500 ERROR RAW PAYLOAD ===\n', JSON.stringify(error.response?.data, null, 2), '\n\n');
                 message = 'Terjadi kesalahan internal pada server.';
             } else if (error.response.data && error.response.data.message) {
                 // Use server provided message if available
