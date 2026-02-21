@@ -28,7 +28,7 @@ export default function ScanScreen() {
     const { categories, fetchCategories } = useCategoryStore();
 
     const [image, setImage] = useState<string | null>(null);
-    const [imageFile, setImageFile] = useState<File | undefined>(undefined);
+    const [localImageFile, setLocalImageFile] = useState<any>(undefined);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export default function ScanScreen() {
 
         if (!result.canceled) {
             setImage(result.assets[0].uri);
-            setImageFile(result.assets[0].file);
+            setLocalImageFile(result.assets[0].file);
         }
     };
 
@@ -67,7 +67,7 @@ export default function ScanScreen() {
 
         if (!result.canceled) {
             setImage(result.assets[0].uri);
-            setImageFile(result.assets[0].file);
+            setLocalImageFile(result.assets[0].file);
         }
     };
 
@@ -81,7 +81,7 @@ export default function ScanScreen() {
             // Compress image before sending to AI to speed up the upload
             setCompressionStatus('Mengoptimalkan ukuran struk...');
             let finalImageUri = image;
-            let finalImageFile = imageFile;
+            let finalImageFile = localImageFile;
 
             try {
                 const compressed = await compressImage(image, (progress) => {
@@ -96,7 +96,7 @@ export default function ScanScreen() {
                     // Fetch new blob to recreate File
                     const res = await fetch(compressed.uri);
                     const blob = await res.blob();
-                    finalImageFile = new File([blob], imageFile?.name || 'receipt.jpg', { type: blob.type });
+                    finalImageFile = new File([blob], localImageFile?.name || 'receipt.jpg', { type: blob.type });
                 } else {
                     finalImageFile = undefined;
                 }
@@ -113,7 +113,7 @@ export default function ScanScreen() {
 
                 // Update store with extracted data
                 setImageUri(image);
-                if (imageFile) setImageFile(imageFile);
+                if (localImageFile) setImageFile(localImageFile);
 
                 if (data.total_amount) setAmount(data.total_amount.toString());
                 if (data.transaction_date) setDate(new Date(data.transaction_date));
@@ -222,7 +222,7 @@ export default function ScanScreen() {
 
                                     <View className="flex-row gap-3">
                                         <TouchableOpacity
-                                            onPress={() => { setImage(null); setImageFile(undefined); }}
+                                            onPress={() => { setImage(null); setLocalImageFile(undefined); }}
                                             className="flex-1 bg-surface-elevated p-4 rounded-2xl flex-row items-center justify-center"
                                             activeOpacity={0.8}
                                         >

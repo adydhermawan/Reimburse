@@ -27,13 +27,13 @@ export interface CreateReimbursementRequest {
         name: string;
     };
     // Web-only: File object from input[type=file]
-    imageFile?: File;
+    imageFile?: any;
 }
 
 /**
  * Helper: append an image to FormData in a platform-aware way
  */
-function appendImageToFormData(formData: FormData, fieldName: string, image: { uri: string; type: string; name: string }, imageFile?: File) {
+function appendImageToFormData(formData: FormData, fieldName: string, image: { uri: string; type: string; name: string }, imageFile?: any) {
     if (Platform.OS === 'web') {
         if (imageFile) {
             // We have a real File object (from platformImagePicker)
@@ -74,7 +74,7 @@ function appendImageToFormData(formData: FormData, fieldName: string, image: { u
 /**
  * Helper: async version of appendImageToFormData for web blob URIs
  */
-async function appendImageToFormDataAsync(formData: FormData, fieldName: string, image: { uri: string; type: string; name: string }, imageFile?: File) {
+async function appendImageToFormDataAsync(formData: FormData, fieldName: string, image: { uri: string; type: string; name: string }, imageFile?: any) {
     if (Platform.OS === 'web') {
         if (imageFile) {
             formData.append(fieldName, imageFile, imageFile.name);

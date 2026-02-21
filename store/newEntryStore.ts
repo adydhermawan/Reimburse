@@ -14,7 +14,7 @@ import {
 interface NewEntryState {
     step: number;
     imageUri: string | null;
-    imageFile?: File;
+    imageFile?: any;
     date: Date;
     category: string;
     categoryId: number | undefined;
@@ -28,7 +28,7 @@ interface NewEntryState {
     // Actions
     setStep: (step: number) => void;
     setImageUri: (uri: string | null) => void;
-    setImageFile: (file?: File) => void;
+    setImageFile: (file?: any) => void;
     setDate: (date: Date) => void;
     setCategory: (category: string) => void;
     setCategoryId: (categoryId: number | undefined) => void;

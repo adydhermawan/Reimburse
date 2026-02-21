@@ -1,0 +1,70 @@
+env: load .env.development.local .env.local .env.development .env
+env: export EXPO_PUBLIC_API_URL
+Starting project at /Users/adydhermawan/Projects/Reimburse
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8082
+Logs for your project will appear below.
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 45.4% ( 432/2331)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 58.2% (1905/2498)
+Web Bundling failed 8818ms node_modules/expo-router/entry.js (2971 modules)
+ ERROR  SyntaxError: /Users/adydhermawan/Projects/Reimburse/app/(app)/new-entry/scan.tsx: Identifier 'setImageFile' has already been declared. (31:22)
+
+  29 |
+  30 |     const [image, setImage] = useState<string | null>(null);
+> 31 |     const [imageFile, setImageFile] = useState<any>(undefined);
+     |                       ^
+  32 |     const [isAnalyzing, setIsAnalyzing] = useState(false);
+  33 |
+  34 |     const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
+    at constructor (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:365:19)
+    at TypeScriptParserMixin.raise (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:6599:19)
+    at TypeScriptScopeHandler.checkRedeclarationInScope (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:1619:19)
+    at TypeScriptScopeHandler.declareName (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:1585:12)
+    at TypeScriptScopeHandler.declareName (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:4880:11)
+    at TypeScriptParserMixin.declareNameFromIdentifier (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:7567:16)
+    at TypeScriptParserMixin.checkIdentifier (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:7563:12)
+    at TypeScriptParserMixin.checkLVal (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:7500:12)
+    at TypeScriptParserMixin.checkLVal (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:7540:16)
+    at TypeScriptParserMixin.parseVarId (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13412:10)
+    at TypeScriptParserMixin.parseVarId (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:9752:11)
+    at TypeScriptParserMixin.parseVar (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13383:12)
+    at TypeScriptParserMixin.parseVarStatement (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13230:10)
+    at TypeScriptParserMixin.parseVarStatement (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:9408:31)
+    at TypeScriptParserMixin.parseStatementContent (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12851:23)
+    at TypeScriptParserMixin.parseStatementContent (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:9508:18)
+    at TypeScriptParserMixin.parseStatementLike (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12767:17)
+    at TypeScriptParserMixin.parseStatementListItem (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12747:17)
+    at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13316:61)
+    at TypeScriptParserMixin.parseBlockBody (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13309:10)
+    at TypeScriptParserMixin.parseBlock (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13297:10)
+    at TypeScriptParserMixin.parseFunctionBody (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12100:24)
+    at TypeScriptParserMixin.parseFunctionBodyAndFinish (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12086:10)
+    at TypeScriptParserMixin.parseFunctionBodyAndFinish (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:9172:18)
+    at /Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13445:12
+    at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12403:14)
+    at TypeScriptParserMixin.parseFunction (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13444:10)
+    at TypeScriptParserMixin.parseExportDefaultExpression (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13907:19)
+    at TypeScriptParserMixin.parseExportDefaultExpression (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:9402:18)
+    at TypeScriptParserMixin.parseExport (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13828:25)
+    at TypeScriptParserMixin.parseExport (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:9385:20)
+    at TypeScriptParserMixin.parseStatementContent (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12878:27)
+    at TypeScriptParserMixin.parseStatementContent (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:9508:18)
+    at TypeScriptParserMixin.parseStatementLike (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12767:17)
+    at TypeScriptParserMixin.parseModuleItem (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12744:17)
+    at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13316:36)
+    at TypeScriptParserMixin.parseBlockBody (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:13309:10)
+    at TypeScriptParserMixin.parseProgram (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12622:10)
+    at TypeScriptParserMixin.parseTopLevel (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:12612:25)
+    at TypeScriptParserMixin.parse (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:14488:25)
+    at TypeScriptParserMixin.parse (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:10126:18)
+    at parse (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/parser/lib/index.js:14501:26)
+    at parser (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/core/lib/transformation/index.js:22:50)
+    at run.next (<anonymous>)
+    at transform (/Users/adydhermawan/Projects/Reimburse/node_modules/@babel/core/lib/transform.js:22:33)
+    at transform.next (<anonymous>)

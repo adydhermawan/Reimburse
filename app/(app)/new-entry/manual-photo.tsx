@@ -41,7 +41,7 @@ export default function PhotoCaptureScreen() {
     const [cameraReady, setCameraReady] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
-    const [capturedFile, setCapturedFile] = useState<File | undefined>(undefined);
+    const [capturedFile, setCapturedFile] = useState<any>(undefined);
     const [facing, setFacing] = useState<'front' | 'back'>('back');
     const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
     const cameraRef = useRef<any>(null);
