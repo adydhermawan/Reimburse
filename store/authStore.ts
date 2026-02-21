@@ -213,6 +213,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } catch (error) {
             // Ignore errors, we'll clear local state anyway
         } finally {
+            // Clear persisted auth data from storage
+            await removeToken();
+            await removeUserData();
+
             set({
                 isAuthenticated: false,
                 user: null,

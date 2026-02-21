@@ -66,7 +66,7 @@ export default function LoginScreen() {
                     {/* Header Section */}
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
-                        className="items-center justify-center w-full mb-12"
+                        className={`items-center justify-center w-full ${Platform.OS === 'web' ? 'mb-12' : 'mb-8'}`}
                     >
                         <View className="mb-6 items-center justify-center">
                             <Image
@@ -140,7 +140,7 @@ export default function LoginScreen() {
                     {/* Footer Section */}
                     <Animated.View
                         entering={FadeInUp.delay(400).springify()}
-                        className="flex-row items-center justify-center w-full mt-8"
+                        className={`flex-row items-center justify-center w-full ${Platform.OS === 'web' ? 'mt-8' : 'mt-12'}`}
                     >
                         <Text className="text-text-secondary text-center">Don't have an account? </Text>
                         <TouchableOpacity disabled={isLoading} className="items-center justify-center">
