@@ -4,6 +4,7 @@
  */
 
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import { Platform } from 'react-native';
 import * as SecureStore from './platformStorage';
 
 // Storage keys
@@ -74,10 +75,7 @@ const api: AxiosInstance = axios.create({
     timeout: 30000,
     headers: {
         'Accept': 'application/json',
-
         'Content-Type': 'application/json',
-        // Add fake User-Agent to bypass Cloudflare 520 errors
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     },
 });
 
@@ -88,6 +86,10 @@ api.interceptors.request.use(
         const token = await getToken();
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
+        }
+        // Set User-Agent only on native (browsers block custom User-Agent headers)
+        if (Platform.OS !== 'web' && config.headers) {
+            config.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
         }
         return config;
     },
@@ -115,8 +117,8 @@ api.interceptors.response.use(
             const status = error.response.status;
 
             if (status === 401) {
-                // Token expired or invalid - clear it
-                await removeToken();
+                // Don't auto-clear token here — let the auth store handle token cleanup
+                // The auth store's initAuth() properly handles 401 by checking cached data
                 message = 'Sesi Anda telah berakhir. Silakan login kembali.';
             } else if (status === 404) {
                 message = 'Data tidak ditemukan.';

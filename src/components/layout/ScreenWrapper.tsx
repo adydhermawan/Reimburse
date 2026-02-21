@@ -40,7 +40,7 @@ export default function ScreenWrapper({
             edges={withSafeArea ? edges : undefined}
             style={[
                 style,
-                Platform.OS === 'web' && withSafeArea && edges?.includes('top') && { paddingTop: 48 },
+                Platform.OS === 'web' && withSafeArea && edges?.includes('top') && { paddingTop: 24 },
                 Platform.OS === 'web' && withSafeArea && edges?.includes('bottom') && { paddingBottom: 24 },
             ]}
             {...props}
