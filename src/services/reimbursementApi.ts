@@ -155,10 +155,6 @@ export const reimbursementApi = {
             formData.append('category_id', data.category_id.toString());
         }
 
-        if (data.category_name) {
-            formData.append('category_name', data.category_name);
-        }
-
         formData.append('amount', data.amount.toString());
         formData.append('transaction_date', data.transaction_date);
 
@@ -197,7 +193,7 @@ export const reimbursementApi = {
 
         if (data.client_name) formData.append('client_name', data.client_name);
         if (data.category_id) formData.append('category_id', data.category_id.toString());
-        if (data.category_name) formData.append('category_name', data.category_name);
+        // category_name is NOT a DB column, don't send it
         if (data.amount) formData.append('amount', data.amount.toString());
         if (data.transaction_date) formData.append('transaction_date', data.transaction_date);
         if (data.note !== undefined) formData.append('note', data.note || '');
