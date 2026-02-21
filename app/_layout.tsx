@@ -76,6 +76,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         if (!isInitialized) return;
+        if (segments.length === 0) return; // Prevent rogue redirects during router transition
 
         const inAuthGroup = segments[0] === '(app)';
 

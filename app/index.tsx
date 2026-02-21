@@ -66,19 +66,19 @@ export default function LoginScreen() {
                     {/* Header Section */}
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
-                        className="items-center mb-10"
+                        className="items-center justify-center w-full mb-8"
                     >
-                        <View className="mb-4">
+                        <View className="mb-6 items-center justify-center">
                             <Image
                                 source={require('../assets/splash-icon.png')}
                                 style={{ width: 100, height: 100 }}
                                 resizeMode="contain"
                             />
                         </View>
-                        <Text className="text-3xl font-bold text-white text-center mb-2">
+                        <Text className="text-3xl font-bold text-white text-center w-full mb-2">
                             Welcome to Recashly
                         </Text>
-                        <Text className="text-text-secondary text-base text-center">
+                        <Text className="text-text-secondary text-base text-center w-full">
                             Sign in to continue managing your expenses
                         </Text>
                     </Animated.View>
@@ -86,9 +86,9 @@ export default function LoginScreen() {
                     {/* Form Section */}
                     <Animated.View
                         entering={FadeInDown.delay(200).springify()}
-                        className="space-y-4"
+                        className="w-full"
                     >
-                        <View>
+                        <View className="mb-4">
                             <Text className="text-white font-medium mb-2 ml-1">Email Address</Text>
                             <TextInput
                                 className="w-full bg-surface-elevated text-white p-4 rounded-xl border border-white/10 focus:border-primary text-base"
@@ -103,7 +103,7 @@ export default function LoginScreen() {
                             />
                         </View>
 
-                        <View>
+                        <View className="mb-2">
                             <Text className="text-white font-medium mb-2 ml-1">Password</Text>
                             <TextInput
                                 className="w-full bg-surface-elevated text-white p-4 rounded-xl border border-white/10 focus:border-primary text-base"
@@ -115,13 +115,16 @@ export default function LoginScreen() {
                                 autoComplete="password"
                                 editable={!isLoading}
                             />
-                            <TouchableOpacity className="items-end mt-2" disabled={isLoading}>
+                        </View>
+
+                        <View className="items-end mb-6">
+                            <TouchableOpacity disabled={isLoading}>
                                 <Text className="text-primary text-sm font-medium">Forgot Password?</Text>
                             </TouchableOpacity>
                         </View>
 
                         <TouchableOpacity
-                            className={`w-full bg-primary p-4 rounded-xl items-center mt-2 ${isLoading ? 'opacity-70' : ''} active:opacity-90`}
+                            className={`w-full bg-primary p-4 rounded-xl items-center ${isLoading ? 'opacity-70' : ''} active:opacity-90`}
                             onPress={handleLogin}
                             disabled={isLoading}
                             activeOpacity={0.8}
@@ -137,11 +140,11 @@ export default function LoginScreen() {
                     {/* Footer Section */}
                     <Animated.View
                         entering={FadeInUp.delay(400).springify()}
-                        className="flex-row justify-center mt-8"
+                        className="flex-row items-center justify-center w-full mt-12"
                     >
-                        <Text className="text-text-secondary">Don't have an account? </Text>
-                        <TouchableOpacity disabled={isLoading}>
-                            <Text className="text-primary font-bold">Sign Up</Text>
+                        <Text className="text-text-secondary text-center">Don't have an account? </Text>
+                        <TouchableOpacity disabled={isLoading} className="items-center justify-center">
+                            <Text className="text-primary font-bold text-center">Sign Up</Text>
                         </TouchableOpacity>
                     </Animated.View>
                 </ScrollView>

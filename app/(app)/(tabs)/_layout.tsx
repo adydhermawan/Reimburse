@@ -50,6 +50,7 @@ export default function TabLayout() {
                 name="new_entry_placeholder"
                 options={{
                     title: 'New',
+                    href: '/(app)/new-entry',
                     tabBarIcon: ({ color }) => (
                         <View className="items-center justify-center">
                             <View className="bg-primary/10 w-12 h-12 rounded-xl items-center justify-center border border-primary/20">
@@ -57,18 +58,13 @@ export default function TabLayout() {
                             </View>
                         </View>
                     ),
-                    tabBarButton: (props) => {
-                        const { delayLongPress, ...rest } = props as any;
-                        return (
-                            <TouchableOpacity
-                                {...rest}
-                                delayLongPress={delayLongPress ?? undefined}
-                                onPress={() => router.push('/(app)/new-entry/')}
-                                activeOpacity={0.7}
-                            />
-                        );
-                    },
                 }}
+                listeners={() => ({
+                    tabPress: (e) => {
+                        e.preventDefault();
+                        router.push('/(app)/new-entry');
+                    },
+                })}
             />
 
             <Tabs.Screen

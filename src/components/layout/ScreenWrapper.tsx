@@ -19,10 +19,12 @@ interface ScreenWrapperProps extends ViewProps {
     withPadding?: boolean;
 }
 
+const DEFAULT_EDGES: SafeAreaViewProps['edges'] = ['top'];
+
 export default function ScreenWrapper({
     children,
     withSafeArea = true,
-    edges = ['top'],
+    edges = DEFAULT_EDGES,
     withKeyboardAvoiding = false,
     withPadding = false,
     className = '',

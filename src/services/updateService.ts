@@ -82,7 +82,7 @@ class UpdateService {
             const Constants = require('expo-constants').default;
             const currentVersion = Constants.expoConfig?.version || '1.0.0';
 
-            const response = await api.get<{ data: AppVersionInfo }>('/api/app-version');
+            const response = await api.get<{ data: AppVersionInfo }>('/app-version');
             const latestVersion = response.data.data;
 
             if (this.isNewerVersion(latestVersion.version, currentVersion)) {
