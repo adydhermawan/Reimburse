@@ -133,8 +133,17 @@ async function compressImageNative(
         { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
     );
 
-    let fileInfo = await FileSystem.getInfoAsync(result.uri);
-    let currentSize = fileInfo.size || 0;
+    let fileInfo;
+    try {
+        // Try new API first using legacy import as suggested by error
+        const LegacyFS = require('expo-file-system/legacy');
+        fileInfo = await LegacyFS.getInfoAsync(result.uri);
+    } catch (e) {
+        // Fallback for older web/native mismatch
+        fileInfo = await FileSystem.getInfoAsync(result.uri).catch(() => ({ size: 0 }));
+    }
+
+    let currentSize = fileInfo?.size || 0;
 
     // Iteratively compress if still too large
     let quality = 0.7;
@@ -153,8 +162,13 @@ async function compressImageNative(
             { compress: quality, format: ImageManipulator.SaveFormat.JPEG }
         );
 
-        fileInfo = await FileSystem.getInfoAsync(result.uri);
-        currentSize = fileInfo.size || 0;
+        try {
+            const LegacyFS = require('expo-file-system/legacy');
+            fileInfo = await LegacyFS.getInfoAsync(result.uri);
+        } catch (e) {
+            fileInfo = await FileSystem.getInfoAsync(result.uri).catch(() => ({ size: 0 }));
+        }
+        currentSize = fileInfo?.size || 0;
         quality -= 0.1;
         if (quality < 0.1) quality = 0.1;
     }
