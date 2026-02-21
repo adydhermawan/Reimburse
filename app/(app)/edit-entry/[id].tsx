@@ -27,6 +27,7 @@ export default function EditEntryScreen() {
     const [entry, setEntry] = useState<Reimbursement | null | undefined>(getEntryById(numericId));
     const [isLoading, setIsLoading] = useState(!entry);
     const [localError, setLocalError] = useState<string | null>(null);
+    const [imageLoading, setImageLoading] = useState(true);
 
     // Form state
     const [clientName, setClientName] = useState('');
@@ -281,7 +282,21 @@ export default function EditEntryScreen() {
                             <Text className="text-text-secondary text-xs ml-auto">(Tidak dapat diubah)</Text>
                         </View>
                         {imageUrl ? (
-                            <Image source={{ uri: imageUrl }} className="w-full h-48 rounded-xl" resizeMode="cover" />
+                            <View className="w-full h-48 rounded-xl overflow-hidden bg-surface-elevated relative">
+                                <Image
+                                    source={{ uri: imageUrl }}
+                                    className="w-full h-full"
+                                    resizeMode="cover"
+                                    onLoadStart={() => setImageLoading(true)}
+                                    onLoadEnd={() => setImageLoading(false)}
+                                />
+                                {imageLoading && (
+                                    <View className="absolute inset-0 bg-surface-elevated items-center justify-center">
+                                        <ActivityIndicator size="large" color={colors.primary} />
+                                        <Text className="text-text-secondary text-sm mt-2">Memuat foto...</Text>
+                                    </View>
+                                )}
+                            </View>
                         ) : (
                             <View className="w-full h-32 bg-surface-elevated rounded-xl items-center justify-center border border-white/10">
                                 <Camera size={32} color="#6E7681" />

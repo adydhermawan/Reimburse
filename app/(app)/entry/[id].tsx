@@ -22,6 +22,7 @@ export default function EntryDetailScreen() {
     const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [imageLoading, setImageLoading] = useState(true);
 
     // Convert string id to number for getEntryById
     const numericId = id ? parseInt(id, 10) : 0;
@@ -214,7 +215,21 @@ export default function EntryDetailScreen() {
                             <Text className="text-text-secondary text-xs ml-2">FOTO STRUK</Text>
                         </View>
                         {imageUrl ? (
-                            <Image source={{ uri: imageUrl }} className="w-full h-48 rounded-xl" resizeMode="cover" />
+                            <View className="w-full h-48 rounded-xl overflow-hidden bg-surface-elevated relative">
+                                <Image
+                                    source={{ uri: imageUrl }}
+                                    className="w-full h-full"
+                                    resizeMode="cover"
+                                    onLoadStart={() => setImageLoading(true)}
+                                    onLoadEnd={() => setImageLoading(false)}
+                                />
+                                {imageLoading && (
+                                    <View className="absolute inset-0 bg-surface-elevated items-center justify-center">
+                                        <ActivityIndicator size="large" color={colors.primary} />
+                                        <Text className="text-text-secondary text-sm mt-2">Memuat foto...</Text>
+                                    </View>
+                                )}
+                            </View>
                         ) : (
                             <View className="w-full h-32 bg-surface-elevated rounded-xl items-center justify-center border border-white/10">
                                 <Camera size={32} color="#6E7681" />
