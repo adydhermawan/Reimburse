@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, Tag, Building2, Wallet, Camera, FileText, Trash2, Edit3, AlertCircle } from 'lucide-react-native';
@@ -101,35 +101,57 @@ export default function EntryDetailScreen() {
         return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     };
 
+    const performDelete = async () => {
+        setIsDeleting(true);
+        try {
+            const success = await deleteReimbursement(numericId);
+            if (success) {
+                if (Platform.OS === 'web') {
+                    window.alert('Reimbursement berhasil dihapus');
+                    router.back();
+                } else {
+                    Alert.alert('Berhasil', 'Reimbursement berhasil dihapus', [
+                        { text: 'OK', onPress: () => router.back() }
+                    ]);
+                }
+            } else {
+                if (Platform.OS === 'web') {
+                    window.alert(error || 'Gagal menghapus reimbursement');
+                } else {
+                    Alert.alert('Gagal', error || 'Gagal menghapus reimbursement');
+                }
+            }
+        } catch (e: any) {
+            if (Platform.OS === 'web') {
+                window.alert(e.message || 'Terjadi kesalahan');
+            } else {
+                Alert.alert('Error', e.message || 'Terjadi kesalahan');
+            }
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const handleDelete = () => {
-        Alert.alert(
-            'Hapus Reimbursement',
-            'Apakah Anda yakin ingin menghapus reimbursement ini? Tindakan ini tidak dapat dibatalkan.',
-            [
-                { text: 'Batal', style: 'cancel' },
-                {
-                    text: 'Hapus',
-                    style: 'destructive',
-                    onPress: async () => {
-                        setIsDeleting(true);
-                        try {
-                            const success = await deleteReimbursement(numericId);
-                            if (success) {
-                                Alert.alert('Berhasil', 'Reimbursement berhasil dihapus', [
-                                    { text: 'OK', onPress: () => router.back() }
-                                ]);
-                            } else {
-                                Alert.alert('Gagal', error || 'Gagal menghapus reimbursement');
-                            }
-                        } catch (e: any) {
-                            Alert.alert('Error', e.message || 'Terjadi kesalahan');
-                        } finally {
-                            setIsDeleting(false);
-                        }
+        if (Platform.OS === 'web') {
+            const confirmed = window.confirm('Apakah Anda yakin ingin menghapus reimbursement ini? Tindakan ini tidak dapat dibatalkan.');
+            if (confirmed) {
+                performDelete();
+            }
+        } else {
+            Alert.alert(
+                'Hapus Reimbursement',
+                'Apakah Anda yakin ingin menghapus reimbursement ini? Tindakan ini tidak dapat dibatalkan.',
+                [
+                    { text: 'Batal', style: 'cancel' },
+                    {
+                        text: 'Hapus',
+                        style: 'destructive',
+                        onPress: performDelete,
                     },
-                },
-            ]
-        );
+                ]
+            );
+        }
     };
 
     const handleEdit = () => {
