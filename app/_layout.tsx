@@ -82,12 +82,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         if (!isInitialized) return;
-        if (segments.length === 0) return; // Prevent rogue redirects during router transition
 
-        const inAuthGroup = segments[0] === '(app)';
+        const inAuthGroup = segments.length > 0 && segments[0] === '(app)';
 
         if (isAuthenticated && !inAuthGroup) {
-            // User is signed in but on login page, redirect to app
+            // User is signed in but on login page (or root), redirect to app
             router.replace('/(app)/(tabs)');
         } else if (!isAuthenticated && inAuthGroup) {
             // User is not signed in but trying to access protected route

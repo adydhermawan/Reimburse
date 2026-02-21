@@ -38,11 +38,7 @@ export default function ScreenWrapper({
         <Container
             className="flex-1 bg-background"
             edges={withSafeArea ? edges : undefined}
-            style={[
-                style,
-                Platform.OS === 'web' && withSafeArea && edges?.includes('top') && { paddingTop: 24 },
-                Platform.OS === 'web' && withSafeArea && edges?.includes('bottom') && { paddingBottom: 24 },
-            ]}
+            style={[style]}
             {...props}
         >
             <StatusBar style="light" backgroundColor={colors.background} />
