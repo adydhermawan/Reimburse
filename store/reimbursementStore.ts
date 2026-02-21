@@ -264,9 +264,9 @@ export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
      * Fetch single entry by ID from API
      */
     fetchReimbursementById: async (id) => {
-        // First check if already in store
+        // First check if already in store WITH full data (image_path present)
         const existing = get().entries.find((e) => e.id === id);
-        if (existing) return existing;
+        if (existing && existing.image_path) return existing;
 
         try {
             const response = await reimbursementApi.getReimbursement(id);
