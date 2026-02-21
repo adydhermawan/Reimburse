@@ -1,77 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Image, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Image, Modal, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Camera as CameraIcon, Image as ImageIcon, X, RotateCcw, Check, FlipHorizontal2, FileEdit } from 'lucide-react-native';
 import { ScreenWrapper, Button } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
 import { useNewEntryStore } from '../../../store/newEntryStore';
-import * as Haptics from 'expo-haptics';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator';
-import * as FileSystem from 'expo-file-system';
+import * as Haptics from '../../../src/services/platformHaptics';
+import * as ImagePicker from '../../../src/services/platformImagePicker';
+import { compressImage, CompressionProgress } from '../../../src/services/platformImageCompressor';
 
-interface CompressionProgress {
-    step: 'resizing' | 'compressing' | 'done';
-    iteration?: number;
-    maxIterations?: number;
-    currentSize?: number;
-    targetSize?: number;
-}
+// Only import native camera on non-web platforms
+let CameraView: any = null;
+let useCameraPermissions: any = null;
 
-// Compress image to under 200kb with progress callback
-async function compressImage(
-    uri: string,
-    onProgress?: (progress: CompressionProgress) => void
-): Promise<{ uri: string; finalSize: number }> {
-    let quality = 0.8;
-    let compressedUri = uri;
-    const targetSize = 200 * 1024; // 200kb in bytes
-    const maxIterations = 5;
-
-    // Step 1: Resize image
-    onProgress?.({ step: 'resizing' });
-    const manipulated = await ImageManipulator.manipulateAsync(
-        uri,
-        [{ resize: { width: 1200 } }], // Resize to max 1200px width
-        { compress: quality, format: ImageManipulator.SaveFormat.JPEG }
-    );
-    compressedUri = manipulated.uri;
-
-    // Check file size and compress further if needed
-    let fileInfo = await FileSystem.getInfoAsync(compressedUri);
-    let iterations = 0;
-
-    // Step 2: Iterative compression
-    while (fileInfo.exists && fileInfo.size && fileInfo.size > targetSize && iterations < maxIterations) {
-        onProgress?.({
-            step: 'compressing',
-            iteration: iterations + 1,
-            maxIterations,
-            currentSize: fileInfo.size,
-            targetSize,
-        });
-
-        quality -= 0.15;
-        if (quality < 0.1) quality = 0.1;
-
-        const recompressed = await ImageManipulator.manipulateAsync(
-            compressedUri,
-            [],
-            { compress: quality, format: ImageManipulator.SaveFormat.JPEG }
-        );
-        compressedUri = recompressed.uri;
-        fileInfo = await FileSystem.getInfoAsync(compressedUri);
-        iterations++;
-    }
-
-    const finalSize = fileInfo.exists && fileInfo.size ? fileInfo.size : 0;
-
-    // Step 3: Done
-    onProgress?.({ step: 'done', currentSize: finalSize, targetSize });
-    console.log(`Compressed image size: ${(finalSize / 1024).toFixed(2)}kb`);
-
-    return { uri: compressedUri, finalSize };
+if (Platform.OS !== 'web') {
+    const cameraModule = require('expo-camera');
+    CameraView = cameraModule.CameraView;
+    useCameraPermissions = cameraModule.useCameraPermissions;
 }
 
 export default function PhotoCaptureScreen() {
@@ -87,13 +32,17 @@ export default function PhotoCaptureScreen() {
     const loadDraft = useNewEntryStore((state) => state.loadDraft);
     const clearDraft = useNewEntryStore((state) => state.clearDraft);
 
-    const [permission, requestPermission] = useCameraPermissions();
+    // Native camera permissions (only used on native)
+    const [nativePermission, nativeRequestPermission] = Platform.OS !== 'web' && useCameraPermissions
+        ? useCameraPermissions()
+        : [{ granted: true }, () => Promise.resolve({ granted: true })];
+
     const [cameraReady, setCameraReady] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
     const [facing, setFacing] = useState<'front' | 'back'>('back');
     const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
-    const cameraRef = useRef<CameraView>(null);
+    const cameraRef = useRef<any>(null);
 
     // Draft modal state
     const [showDraftModal, setShowDraftModal] = useState(false);
@@ -102,7 +51,6 @@ export default function PhotoCaptureScreen() {
     // Check for existing draft on mount
     useEffect(() => {
         const checkDraft = async () => {
-            // Don't check if coming from category selection (user wants new entry)
             if (categoryId && categoryName) {
                 setIsCheckingDraft(false);
                 return;
@@ -113,8 +61,6 @@ export default function PhotoCaptureScreen() {
                 setShowDraftModal(true);
             }
             setIsCheckingDraft(false);
-
-            // Set current step
             setStep(1);
         };
 
@@ -126,11 +72,9 @@ export default function PhotoCaptureScreen() {
         setShowDraftModal(false);
         const loaded = await loadDraft();
         if (loaded) {
-            // Get the current step and navigate to the appropriate screen
             const step = useNewEntryStore.getState().step;
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-            // Navigate to the correct step based on saved progress
             switch (step) {
                 case 2:
                     router.push('/(app)/new-entry/date');
@@ -148,7 +92,6 @@ export default function PhotoCaptureScreen() {
                     router.push('/(app)/new-entry/review');
                     break;
                 default:
-                    // Stay on photo screen (step 1)
                     break;
             }
         }
@@ -166,12 +109,32 @@ export default function PhotoCaptureScreen() {
     useEffect(() => {
         if (categoryName) {
             setCategory(categoryName);
-            // Store category ID for later use
             useNewEntryStore.setState({ categoryId: categoryId ? parseInt(categoryId) : undefined });
         }
     }, [categoryId, categoryName]);
 
     const handleTakePhoto = async () => {
+        if (Platform.OS === 'web') {
+            // On web, use file input with camera capture
+            try {
+                setIsProcessing(true);
+                const result = await ImagePicker.launchCameraAsync({
+                    quality: 0.8,
+                });
+
+                if (!result.canceled && result.assets[0]) {
+                    setCapturedPhoto(result.assets[0].uri);
+                }
+            } catch (error) {
+                console.error('Error taking photo:', error);
+                Alert.alert('Error', 'Gagal mengambil foto. Silakan coba lagi.');
+            } finally {
+                setIsProcessing(false);
+            }
+            return;
+        }
+
+        // Native camera
         if (!cameraRef.current || !cameraReady) return;
 
         try {
@@ -180,7 +143,7 @@ export default function PhotoCaptureScreen() {
 
             const photo = await cameraRef.current.takePictureAsync({
                 quality: 0.8,
-                shutterSound: false, // Disable shutter sound
+                shutterSound: false,
             });
 
             if (photo?.uri) {
@@ -197,9 +160,8 @@ export default function PhotoCaptureScreen() {
     const handlePickFromGallery = async () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
-                aspect: [3, 4],
                 quality: 0.8,
             });
 
@@ -223,7 +185,7 @@ export default function PhotoCaptureScreen() {
         setGlobalCompressionStatus('📐 Mengubah ukuran...');
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-        // Navigate to next step immediately - don't wait for compression
+        // Navigate to next step immediately
         router.push('/(app)/new-entry/date');
 
         // Run compression in background
@@ -247,13 +209,11 @@ export default function PhotoCaptureScreen() {
                 setGlobalCompressionStatus(statusMsg);
             });
 
-            // Save compressed image and clear status after a brief delay
             setImageUri(result.uri);
             await new Promise(resolve => setTimeout(resolve, 1500));
             setGlobalCompressionStatus(null);
         } catch (error) {
             console.error('Error compressing image:', error);
-            // If compression fails, save original photo
             setImageUri(capturedPhoto);
             setGlobalCompressionStatus('⚠️ Gagal kompresi');
             await new Promise(resolve => setTimeout(resolve, 2000));
@@ -329,59 +289,125 @@ export default function PhotoCaptureScreen() {
         </Modal>
     );
 
-    // Show permission request screen
-    if (!permission) {
+    // ── Web Camera Screen ────────────────────────────────────
+    // On web, we don't have CameraView — show pick buttons instead
+    if (Platform.OS === 'web' && !capturedPhoto) {
         return (
             <ScreenWrapper className="px-5 py-4">
                 <DraftModal />
-                <View className="flex-1 justify-center items-center">
-                    <ActivityIndicator size="large" color={colors.primary} />
-                </View>
-            </ScreenWrapper>
-        );
-    }
-
-    if (!permission.granted) {
-        return (
-            <ScreenWrapper className="px-5 py-4">
                 <View className="flex-row justify-between items-center mb-4">
                     <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
                         <X size={24} color={colors.text} />
                     </TouchableOpacity>
                     <Text className="text-white font-bold text-lg">Foto Struk</Text>
-                    <View className="w-8" />
+                    <View className="flex-row gap-1.5">
+                        <View className="w-2 h-2 rounded-full bg-primary" />
+                        <View className="w-2 h-2 rounded-full bg-surface-elevated" />
+                        <View className="w-2 h-2 rounded-full bg-surface-elevated" />
+                        <View className="w-2 h-2 rounded-full bg-surface-elevated" />
+                        <View className="w-2 h-2 rounded-full bg-surface-elevated" />
+                    </View>
                 </View>
 
-                <View className="flex-1 justify-center items-center px-8">
-                    <CameraIcon size={64} color={colors.textMuted} />
-                    <Text className="text-white text-xl font-bold mt-6 mb-2 text-center">
-                        Izin Kamera Diperlukan
+                <View className="flex-1 justify-center items-center">
+                    <View className="w-24 h-24 bg-primary/20 rounded-full items-center justify-center mb-6 border border-primary/50">
+                        <CameraIcon size={40} color={colors.primary} />
+                    </View>
+                    <Text className="text-white text-xl font-bold mb-2">📸 Ambil foto struk</Text>
+                    <Text className="text-text-secondary text-center mb-8 px-8">
+                        Pilih foto struk dari kamera atau galeri
                     </Text>
-                    <Text className="text-text-secondary text-center mb-8">
-                        Untuk mengambil foto struk, aplikasi memerlukan akses ke kamera perangkat Anda.
+
+                    <View className="w-full gap-4">
+                        <Button
+                            label="Ambil Foto"
+                            onPress={handleTakePhoto}
+                            icon={<CameraIcon size={20} color={colors.background} />}
+                            className="w-full"
+                            disabled={isProcessing}
+                        />
+                        <Button
+                            label="Pilih dari Galeri"
+                            variant="secondary"
+                            onPress={handlePickFromGallery}
+                            icon={<ImageIcon size={20} color={colors.text} />}
+                            className="w-full"
+                            disabled={isProcessing}
+                        />
+                        <Button
+                            label="Lewati"
+                            variant="ghost"
+                            textClassName="text-text-secondary"
+                            onPress={handleSkip}
+                            className="w-full"
+                        />
+                    </View>
+                </View>
+
+                <View className="items-center mt-4 mb-4">
+                    <Text className="text-text-secondary text-xs text-center px-10">
+                        💡 Gambar akan dikompresi menjadi &lt;200kb secara otomatis
                     </Text>
-                    <Button
-                        label="Izinkan Akses Kamera"
-                        onPress={requestPermission}
-                        className="w-full mb-4"
-                    />
-                    <Button
-                        label="Pilih dari Galeri"
-                        variant="secondary"
-                        onPress={handlePickFromGallery}
-                        icon={<ImageIcon size={20} color={colors.text} />}
-                        className="w-full mb-4"
-                    />
-                    <Button
-                        label="Lewati"
-                        variant="ghost"
-                        textClassName="text-text-secondary"
-                        onPress={handleSkip}
-                        className="w-full"
-                    />
                 </View>
             </ScreenWrapper>
         );
+    }
+
+    // ── Native permission screens ────────────────────────────
+    if (Platform.OS !== 'web') {
+        if (!nativePermission) {
+            return (
+                <ScreenWrapper className="px-5 py-4">
+                    <DraftModal />
+                    <View className="flex-1 justify-center items-center">
+                        <ActivityIndicator size="large" color={colors.primary} />
+                    </View>
+                </ScreenWrapper>
+            );
+        }
+
+        if (!nativePermission.granted) {
+            return (
+                <ScreenWrapper className="px-5 py-4">
+                    <View className="flex-row justify-between items-center mb-4">
+                        <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
+                            <X size={24} color={colors.text} />
+                        </TouchableOpacity>
+                        <Text className="text-white font-bold text-lg">Foto Struk</Text>
+                        <View className="w-8" />
+                    </View>
+
+                    <View className="flex-1 justify-center items-center px-8">
+                        <CameraIcon size={64} color={colors.textMuted} />
+                        <Text className="text-white text-xl font-bold mt-6 mb-2 text-center">
+                            Izin Kamera Diperlukan
+                        </Text>
+                        <Text className="text-text-secondary text-center mb-8">
+                            Untuk mengambil foto struk, aplikasi memerlukan akses ke kamera perangkat Anda.
+                        </Text>
+                        <Button
+                            label="Izinkan Akses Kamera"
+                            onPress={nativeRequestPermission}
+                            className="w-full mb-4"
+                        />
+                        <Button
+                            label="Pilih dari Galeri"
+                            variant="secondary"
+                            onPress={handlePickFromGallery}
+                            icon={<ImageIcon size={20} color={colors.text} />}
+                            className="w-full mb-4"
+                        />
+                        <Button
+                            label="Lewati"
+                            variant="ghost"
+                            textClassName="text-text-secondary"
+                            onPress={handleSkip}
+                            className="w-full"
+                        />
+                    </View>
+                </ScreenWrapper>
+            );
+        }
     }
 
     // Show photo preview screen
@@ -446,7 +472,7 @@ export default function PhotoCaptureScreen() {
         );
     }
 
-    // Show camera screen
+    // ── Native Camera Screen ─────────────────────────────────
     return (
         <ScreenWrapper className="px-5 py-4">
             {/* Header */}
@@ -471,30 +497,32 @@ export default function PhotoCaptureScreen() {
                     Posisikan struk di dalam bingkai
                 </Text>
 
-                {/* Camera View */}
-                <View className="w-full aspect-[3/4] bg-surface rounded-3xl overflow-hidden mb-6">
-                    <CameraView
-                        ref={cameraRef}
-                        style={{ flex: 1 }}
-                        facing={facing}
-                        onCameraReady={() => setCameraReady(true)}
-                    >
-                        {/* Corner guides */}
-                        <View className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-primary rounded-tl-lg" />
-                        <View className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-primary rounded-tr-lg" />
-                        <View className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-primary rounded-bl-lg" />
-                        <View className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-primary rounded-br-lg" />
-
-                        {/* Flip camera button */}
-                        <TouchableOpacity
-                            onPress={toggleCameraFacing}
-                            className="absolute top-4 right-4 bg-black/50 p-2 rounded-full"
-                            style={{ right: 48 }}
+                {/* Camera View - Native only */}
+                {CameraView && (
+                    <View className="w-full aspect-[3/4] bg-surface rounded-3xl overflow-hidden mb-6">
+                        <CameraView
+                            ref={cameraRef}
+                            style={{ flex: 1 }}
+                            facing={facing}
+                            onCameraReady={() => setCameraReady(true)}
                         >
-                            <FlipHorizontal2 size={20} color="white" />
-                        </TouchableOpacity>
-                    </CameraView>
-                </View>
+                            {/* Corner guides */}
+                            <View className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-primary rounded-tl-lg" />
+                            <View className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-primary rounded-tr-lg" />
+                            <View className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-primary rounded-bl-lg" />
+                            <View className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-primary rounded-br-lg" />
+
+                            {/* Flip camera button */}
+                            <TouchableOpacity
+                                onPress={toggleCameraFacing}
+                                className="absolute top-4 right-4 bg-black/50 p-2 rounded-full"
+                                style={{ right: 48 }}
+                            >
+                                <FlipHorizontal2 size={20} color="white" />
+                            </TouchableOpacity>
+                        </CameraView>
+                    </View>
+                )}
 
                 {/* Shutter Button */}
                 <TouchableOpacity

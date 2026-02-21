@@ -1,8 +1,10 @@
 /**
  * Reimbursement API Service
  * Handles all reimbursement CRUD operations
+ * Web-compatible: handles both RN-style and web Blob/File uploads
  */
 
+import { Platform } from 'react-native';
 import api, { API_BASE_URL } from './api';
 import {
     ApiResponse,
@@ -19,11 +21,66 @@ export interface CreateReimbursementRequest {
     amount: number;
     transaction_date: string;
     note?: string;
-    image?: { // Made image optional as it's not always present in partial updates
+    image?: {
         uri: string;
         type: string;
         name: string;
     };
+    // Web-only: File object from input[type=file]
+    imageFile?: File;
+}
+
+/**
+ * Helper: append an image to FormData in a platform-aware way
+ */
+function appendImageToFormData(formData: FormData, fieldName: string, image: { uri: string; type: string; name: string }, imageFile?: File) {
+    if (Platform.OS === 'web') {
+        if (imageFile) {
+            // We have a real File object (from platformImagePicker)
+            formData.append(fieldName, imageFile, imageFile.name);
+        } else if (image.uri.startsWith('blob:')) {
+            // Convert blob URI to File — but we need to fetch it first
+            // This is handled asynchronously in the calling function
+            // Fallback: append as-is (shouldn't normally reach here)
+            formData.append(fieldName, image.uri);
+        } else {
+            // Data URI or similar — convert to blob
+            fetch(image.uri)
+                .then(r => r.blob())
+                .then(blob => {
+                    formData.append(fieldName, blob, image.name);
+                });
+        }
+    } else {
+        // React Native style
+        formData.append(fieldName, {
+            uri: image.uri,
+            type: image.type,
+            name: image.name,
+        } as any);
+    }
+}
+
+/**
+ * Helper: async version of appendImageToFormData for web blob URIs
+ */
+async function appendImageToFormDataAsync(formData: FormData, fieldName: string, image: { uri: string; type: string; name: string }, imageFile?: File) {
+    if (Platform.OS === 'web') {
+        if (imageFile) {
+            formData.append(fieldName, imageFile, imageFile.name);
+        } else {
+            // Fetch the blob URI and convert to a File/Blob
+            const response = await fetch(image.uri);
+            const blob = await response.blob();
+            formData.append(fieldName, blob, image.name);
+        }
+    } else {
+        formData.append(fieldName, {
+            uri: image.uri,
+            type: image.type,
+            name: image.name,
+        } as any);
+    }
 }
 
 export const reimbursementApi = {
@@ -83,11 +140,7 @@ export const reimbursementApi = {
         }
 
         if (data.image) {
-            formData.append('image', {
-                uri: data.image.uri,
-                type: data.image.type,
-                name: data.image.name,
-            } as any);
+            await appendImageToFormDataAsync(formData, 'image', data.image, data.imageFile);
         }
 
         const response = await api.post<ApiResponse<Reimbursement>>(
@@ -97,7 +150,7 @@ export const reimbursementApi = {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
-                timeout: 120000, // 2 minutes for image upload to Cloudinary
+                timeout: 120000,
             }
         );
         return response.data;
@@ -123,11 +176,7 @@ export const reimbursementApi = {
         if (data.note !== undefined) formData.append('note', data.note || '');
 
         if (data.image) {
-            formData.append('image', {
-                uri: data.image.uri,
-                type: data.image.type,
-                name: data.image.name,
-            } as any);
+            await appendImageToFormDataAsync(formData, 'image', data.image, data.imageFile);
         }
 
         const response = await api.post<ApiResponse<Reimbursement>>(
@@ -166,25 +215,29 @@ export const reimbursementApi = {
         const storageBaseUrl = API_BASE_URL.replace('/api', '');
         return `${storageBaseUrl}/storage/${imagePath}`;
     },
+
     /**
      * Scan receipt image using AI
      */
-    scanReceipt: async (imageUri: string): Promise<ApiResponse<any>> => {
+    scanReceipt: async (imageUri: string, imageFile?: File): Promise<ApiResponse<any>> => {
         const formData = new FormData();
 
-        // Append image
         const filename = imageUri.split('/').pop() || 'receipt.jpg';
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : 'image/jpeg';
 
-        // @ts-ignore
-        formData.append('image', { uri: imageUri, name: filename, type });
+        await appendImageToFormDataAsync(
+            formData,
+            'image',
+            { uri: imageUri, type, name: filename },
+            imageFile
+        );
 
         const response = await api.post<ApiResponse<any>>('/scan-receipt', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
-            timeout: 60000, // Longer timeout for AI processing
+            timeout: 60000,
         });
         return response.data;
     },

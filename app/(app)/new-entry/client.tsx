@@ -6,7 +6,7 @@ import { ScreenWrapper, Input } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
 import { useNewEntryStore } from '../../../store/newEntryStore';
 import { useClientStore } from '../../../store/clientStore';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../../src/services/platformHaptics';
 
 export default function ClientScreen() {
     const router = useRouter();

@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../store/authStore';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { ScreenWrapper } from '../src/components';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../src/services/platformHaptics';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -54,15 +53,14 @@ export default function LoginScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-background">
-            <StatusBar style="light" />
+        <ScreenWrapper className="flex-1">
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 className="flex-1"
             >
                 <ScrollView
                     contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-                    className="px-6"
+                    className="px-5"
                     keyboardShouldPersistTaps="handled"
                 >
                     {/* Header Section */}
@@ -148,6 +146,6 @@ export default function LoginScreen() {
                     </Animated.View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </ScreenWrapper>
     );
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, ViewProps, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView, SafeAreaViewProps } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { twMerge } from 'tailwind-merge';
 import { colors } from '../../constants/theme';
 
 interface ScreenWrapperProps extends ViewProps {
@@ -33,13 +34,19 @@ export default function ScreenWrapper({
 
     const content = (
         <Container
-            className={`flex-1 bg-background ${paddingClass} ${className}`}
+            className="flex-1 bg-background"
             edges={withSafeArea ? edges : undefined}
-            style={style}
+            style={[
+                style,
+                Platform.OS === 'web' && withSafeArea && edges?.includes('top') && { paddingTop: 'env(safe-area-inset-top, 24px)' as any },
+                Platform.OS === 'web' && withSafeArea && edges?.includes('bottom') && { paddingBottom: 'env(safe-area-inset-bottom, 24px)' as any },
+            ]}
             {...props}
         >
             <StatusBar style="light" backgroundColor={colors.background} />
-            {children}
+            <View className={twMerge('flex-1', paddingClass, className)}>
+                {children}
+            </View>
         </Container>
     );
 

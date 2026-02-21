@@ -1,9 +1,17 @@
 import { Tabs, useRouter } from 'expo-router';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Platform } from 'react-native';
 import { Home, Plus, History, FileText, User } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
+
+    // Add extra padding for iOS to account for the home indicator and web for mobile browser toolbars
+    const bottomPadding = Platform.OS === 'ios' ? Math.max(insets.bottom, 16) :
+        Platform.OS === 'web' ? insets.bottom : 8;
+    // Base height + dynamic padding
+    const tabHeight = 60 + bottomPadding;
 
     return (
         <Tabs
@@ -13,9 +21,9 @@ export default function TabLayout() {
                     backgroundColor: '#161B22',
                     borderTopWidth: 0,  // Remove border line completely
                     elevation: 0,       // Android shadow removal
-                    height: 60,         // Minimal height
-                    paddingTop: 12,     // Visual center top
-                    paddingBottom: 5,   // Minimal bottom padding
+                    height: tabHeight,  // Dynamic height
+                    paddingTop: 8,      // Visual center top
+                    paddingBottom: bottomPadding, // Dynamic bottom padding
                 },
                 tabBarActiveTintColor: '#22D3EE',
                 tabBarInactiveTintColor: '#6E7681',

@@ -6,7 +6,7 @@ import { ScreenWrapper, Button, Input } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
 import { useNewEntryStore } from '../../../store/newEntryStore';
 import { useCategoryStore } from '../../../store/categoryStore';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../../src/services/platformHaptics';
 
 // Map category icons from API
 const categoryIcons: Record<string, any> = {

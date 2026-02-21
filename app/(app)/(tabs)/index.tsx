@@ -8,7 +8,7 @@ import { useOfflineSyncStore } from '../../../store/offlineSyncStore';
 import { Bell, Utensils, Coffee, Fuel, Car, Smartphone, TrendingUp, Calendar, FileText, RefreshCw, AlertCircle, CloudOff, Loader2 } from 'lucide-react-native';
 import { ScreenWrapper } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../../src/services/platformHaptics';
 
 // Map category icons
 const categoryIcons: Record<string, any> = {
@@ -162,7 +162,8 @@ export default function Dashboard() {
     return (
         <ScreenWrapper edges={['top']}>
             <ScrollView
-                className="flex-1 px-5 pt-2"
+                className="flex-1"
+                contentContainerClassName="px-5 pt-2"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={isLoading} onRefresh={onRefresh} tintColor={colors.primary} />

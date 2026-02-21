@@ -92,7 +92,8 @@ export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
         if (append) {
             set({ isLoadingMore: true, error: null });
         } else {
-            set({ isLoading: true, error: null });
+            // Clear entries so the loading indicator shows up
+            set({ isLoading: true, error: null, entries: [] });
         }
 
         try {

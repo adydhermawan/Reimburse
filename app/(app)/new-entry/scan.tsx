@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Camera, Image as ImageIcon, Check, RefreshCw, ScanLine } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from '../../../src/services/platformImagePicker';
 import { ScreenWrapper } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
 import { useNewEntryStore } from '../../../store/newEntryStore';
 import { useCategoryStore } from '../../../store/categoryStore';
 import reimbursementApi from '../../../src/services/reimbursementApi';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../../src/services/platformHaptics';
 
 export default function ScanScreen() {
     const router = useRouter();
@@ -26,6 +26,7 @@ export default function ScanScreen() {
     const { categories, fetchCategories } = useCategoryStore();
 
     const [image, setImage] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | undefined>(undefined);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // Set step for progress indicator and ensure categories are loaded
@@ -43,6 +44,7 @@ export default function ScanScreen() {
 
         if (!result.canceled) {
             setImage(result.assets[0].uri);
+            setImageFile(result.assets[0].file);
         }
     };
 
@@ -54,13 +56,14 @@ export default function ScanScreen() {
         }
 
         const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: Platform.OS === 'android', // iOS ignores aspect ratio, so skip editing
-            aspect: [3, 4], // Only effective on Android
+            allowsEditing: Platform.OS === 'android',
+            aspect: [3, 4],
             quality: 0.8,
         });
 
         if (!result.canceled) {
             setImage(result.assets[0].uri);
+            setImageFile(result.assets[0].file);
         }
     };
 
@@ -71,7 +74,7 @@ export default function ScanScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         try {
-            const response = await reimbursementApi.scanReceipt(image);
+            const response = await reimbursementApi.scanReceipt(image, imageFile);
 
             if (response.success && response.data) {
                 const data = response.data;
@@ -85,7 +88,6 @@ export default function ScanScreen() {
                 if (data.merchant_name) setClient(data.merchant_name);
                 if (data.category_prediction) {
                     setCategory(data.category_prediction);
-                    // Also look up the category ID from the categories store
                     const matchedCat = categories.find(
                         c => c.name.toLowerCase() === data.category_prediction.toLowerCase()
                     );
@@ -188,7 +190,7 @@ export default function ScanScreen() {
 
                                     <View className="flex-row gap-3">
                                         <TouchableOpacity
-                                            onPress={() => setImage(null)}
+                                            onPress={() => { setImage(null); setImageFile(undefined); }}
                                             className="flex-1 bg-surface-elevated p-4 rounded-2xl flex-row items-center justify-center"
                                             activeOpacity={0.8}
                                         >

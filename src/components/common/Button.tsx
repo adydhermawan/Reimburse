@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, TouchableOpacityProps, ActivityIndicator } from 'react-native';
 import { twMerge } from 'tailwind-merge';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../services/platformHaptics';
 import { colors } from '../../constants/theme';
 
 interface ButtonProps extends TouchableOpacityProps {

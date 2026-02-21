@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "runtimeVersion": {
       "policy": "appVersion"
@@ -39,7 +39,14 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single",
+      "name": "Recashly",
+      "shortName": "Recashly",
+      "description": "Kelola reimburse Anda dengan mudah",
+      "themeColor": "#0D1117",
+      "backgroundColor": "#0D1117"
     },
     "plugins": [
       "expo-router",
@@ -48,7 +55,6 @@
         "expo-build-properties",
         {
           "android": {
-            "kotlinVersion": "2.0.21",
             "packagingOptions": {
               "pickFirst": [
                 "**/libc++_shared.so"

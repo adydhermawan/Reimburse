@@ -1,12 +1,13 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Modal, TextInput, Platform } from 'react-native';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, Modal, TextInput, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Calendar, FileText, X, Check } from 'lucide-react-native';
 import { useReimbursementStore } from '../../../store/reimbursementStore';
 import { colors } from '../../../src/constants/theme';
 import { ReimbursementFilters } from '../../../src/types';
-import * as Haptics from 'expo-haptics';
+import { ScreenWrapper } from '../../../src/components';
+import * as Haptics from '../../../src/services/platformHaptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 type StatusFilter = 'pending' | 'approved' | 'rejected' | 'in_report' | 'paid' | 'all';
@@ -30,7 +31,7 @@ const statusColors: Record<string, { bg: string; text: string; label: string }> 
 
 export default function HistoryScreen() {
     const router = useRouter();
-    const { entries, isLoading, pagination, fetchReimbursements } = useReimbursementStore();
+    const { entries, isLoading, isLoadingMore, pagination, fetchReimbursements } = useReimbursementStore();
     const [activeTab, setActiveTab] = useState<StatusFilter>('all');
     const [refreshing, setRefreshing] = useState(false);
 
@@ -78,6 +79,12 @@ export default function HistoryScreen() {
         setRefreshing(false);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }, [buildFilters]);
+
+    const handleLoadMore = () => {
+        if (!isLoadingMore && pagination && pagination.currentPage < pagination.lastPage) {
+            fetchReimbursements({ ...buildFilters(), page: pagination.currentPage + 1 }, true);
+        }
+    };
 
     const handleTabChange = (tab: StatusFilter) => {
         Haptics.selectionAsync();
@@ -134,7 +141,7 @@ export default function HistoryScreen() {
     const hasActiveFilters = activeSearch || activeDateFrom || activeDateTo;
 
     return (
-        <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+        <ScreenWrapper className="flex-1" edges={['top']}>
             {/* Header */}
             <View className="px-5 pt-4 pb-2 flex-row justify-between items-center">
                 <Text className="text-white text-2xl font-bold">Riwayat</Text>
@@ -162,8 +169,8 @@ export default function HistoryScreen() {
 
             {/* Active Filters Display */}
             {hasActiveFilters && (
-                <View className="px-5 pb-2">
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View className="pb-2">
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="px-5">
                         {activeSearch && (
                             <TouchableOpacity
                                 onPress={handleClearSearch}
@@ -191,8 +198,8 @@ export default function HistoryScreen() {
             )}
 
             {/* Filter Tabs */}
-            <View className="px-5 py-3">
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View className="py-3">
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="px-5 pb-2">
                     {tabs.map((tab) => (
                         <TouchableOpacity
                             key={tab.value}
@@ -214,96 +221,105 @@ export default function HistoryScreen() {
             </View>
 
             {/* Entries List */}
-            <ScrollView
-                className="flex-1 px-5"
+            <FlatList
+                data={entries}
+                keyExtractor={(item) => item.id.toString()}
+                className="flex-1"
+                contentContainerClassName={entries.length === 0 || isLoading ? "px-5 flex-1 justify-center" : "px-5 pb-24"}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+                    <RefreshControl refreshing={refreshing || (isLoading && !isLoadingMore)} onRefresh={onRefresh} tintColor={colors.primary} />
                 }
-            >
-                {isLoading && entries.length === 0 ? (
-                    <View className="items-center justify-center py-20">
-                        <ActivityIndicator size="large" color={colors.primary} />
-                        <Text className="text-text-secondary mt-4">Memuat data...</Text>
-                    </View>
-                ) : entries.length === 0 ? (
-                    <View className="items-center justify-center py-20">
-                        <FileText size={48} color="#6E7681" />
-                        <Text className="text-text-secondary mt-4 text-center">
-                            {hasActiveFilters ? 'Tidak ada hasil untuk filter ini' : `Tidak ada riwayat${activeTab !== 'all' ? ` dengan status ${activeTab}` : ''}`}
-                        </Text>
-                        {hasActiveFilters && (
-                            <TouchableOpacity
-                                className="mt-4 bg-primary/20 px-4 py-2 rounded-lg"
-                                onPress={() => {
-                                    handleClearSearch();
-                                    handleClearDates();
-                                }}
-                            >
-                                <Text className="text-primary font-medium">Hapus Filter</Text>
-                            </TouchableOpacity>
-                        )}
-                        {!hasActiveFilters && (
-                            <TouchableOpacity
-                                className="mt-4 bg-primary/20 px-4 py-2 rounded-lg"
-                                onPress={() => router.push('/(app)/new-entry')}
-                            >
-                                <Text className="text-primary font-medium">Buat Entry Baru</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                ) : (
-                    entries.map((item) => {
-                        const config = statusColors[item.status] || statusColors.pending;
-                        return (
-                            <TouchableOpacity
-                                key={item.id}
-                                onPress={() => {
-                                    Haptics.selectionAsync();
-                                    router.push(`/(app)/entry/${item.id}`);
-                                }}
-                                className="bg-surface p-4 rounded-2xl border border-white/5 mb-3 flex-row justify-between items-center active:bg-surface-elevated"
-                            >
-                                <View className="flex-row items-center flex-1 mr-4">
-                                    <View className="w-10 h-10 bg-surface-elevated rounded-xl items-center justify-center mr-3 border border-white/5">
-                                        <FileText size={20} color="#6E7681" />
-                                    </View>
-                                    <View className="flex-1">
-                                        <Text className="text-white font-bold text-base" numberOfLines={1}>
-                                            {item.client?.name || 'Unknown Client'}
-                                        </Text>
-                                        <Text className="text-text-secondary text-xs">
-                                            {item.category?.name || item.category_name || 'No Category'} • {formatDate(item.transaction_date)}
-                                        </Text>
-                                    </View>
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                ListEmptyComponent={() => (
+                    isLoading ? (
+                        <View className="items-center justify-center py-20">
+                            <ActivityIndicator size="large" color={colors.primary} />
+                            <Text className="text-text-secondary mt-4">Memuat data...</Text>
+                        </View>
+                    ) : (
+                        <View className="items-center justify-center py-20">
+                            <FileText size={48} color="#6E7681" />
+                            <Text className="text-text-secondary mt-4 text-center">
+                                {hasActiveFilters ? 'Tidak ada hasil untuk filter ini' : `Tidak ada riwayat${activeTab !== 'all' ? ` dengan status ${activeTab}` : ''}`}
+                            </Text>
+                            {hasActiveFilters && (
+                                <TouchableOpacity
+                                    className="mt-4 bg-primary/20 px-4 py-2 rounded-lg"
+                                    onPress={() => {
+                                        handleClearSearch();
+                                        handleClearDates();
+                                    }}
+                                >
+                                    <Text className="text-primary font-medium">Hapus Filter</Text>
+                                </TouchableOpacity>
+                            )}
+                            {!hasActiveFilters && (
+                                <TouchableOpacity
+                                    className="mt-4 bg-primary/20 px-4 py-2 rounded-lg"
+                                    onPress={() => router.push('/(app)/new-entry')}
+                                >
+                                    <Text className="text-primary font-medium">Buat Entry Baru</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )
+                )}
+                renderItem={({ item }) => {
+                    const config = statusColors[item.status] || statusColors.pending;
+                    return (
+                        <TouchableOpacity
+                            onPress={() => {
+                                Haptics.selectionAsync();
+                                router.push(`/(app)/entry/${item.id}`);
+                            }}
+                            className="bg-surface p-4 rounded-2xl border border-white/5 mb-3 flex-row justify-between items-center active:bg-surface-elevated"
+                        >
+                            <View className="flex-row items-center flex-1 mr-4">
+                                <View className="w-10 h-10 bg-surface-elevated rounded-xl items-center justify-center mr-3 border border-white/5">
+                                    <FileText size={20} color="#6E7681" />
                                 </View>
-
-                                <View className="items-end">
-                                    <Text className="text-white font-bold text-base mb-1">
-                                        Rp {formatAmount(item.amount)}
+                                <View className="flex-1">
+                                    <Text className="text-white font-bold text-base" numberOfLines={1}>
+                                        {item.client?.name || 'Unknown Client'}
                                     </Text>
-                                    <View className={`px-2 py-0.5 rounded-md ${config.bg}`}>
-                                        <Text className={`text-[10px] font-bold ${config.text}`}>
-                                            {config.label}
-                                        </Text>
-                                    </View>
+                                    <Text className="text-text-secondary text-xs">
+                                        {item.category?.name || item.category_name || 'No Category'} • {formatDate(item.transaction_date)}
+                                    </Text>
                                 </View>
-                            </TouchableOpacity>
-                        );
-                    })
-                )}
+                            </View>
 
-                {/* Pagination info */}
-                {pagination && entries.length > 0 && (
-                    <View className="py-4 items-center">
-                        <Text className="text-text-secondary text-sm">
-                            Menampilkan {entries.length} dari {pagination.total} entries
-                        </Text>
-                    </View>
+                            <View className="items-end">
+                                <Text className="text-white font-bold text-base mb-1">
+                                    Rp {formatAmount(item.amount)}
+                                </Text>
+                                <View className={`px-2 py-0.5 rounded-md ${config.bg}`}>
+                                    <Text className={`text-[10px] font-bold ${config.text}`}>
+                                        {config.label}
+                                    </Text>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    );
+                }}
+                ListFooterComponent={() => (
+                    <>
+                        {isLoadingMore && (
+                            <View className="py-4 items-center">
+                                <ActivityIndicator size="small" color={colors.primary} />
+                            </View>
+                        )}
+                        {!isLoadingMore && pagination && entries.length > 0 && pagination.currentPage >= pagination.lastPage && (
+                            <View className="py-4 items-center">
+                                <Text className="text-text-secondary text-sm">
+                                    Semua data telah ditampilkan ({pagination.total})
+                                </Text>
+                            </View>
+                        )}
+                    </>
                 )}
-
-                <View className="h-24" />
-            </ScrollView>
+            />
 
             {/* Search Modal */}
             <Modal
@@ -478,6 +494,6 @@ export default function HistoryScreen() {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </ScreenWrapper>
     );
 }

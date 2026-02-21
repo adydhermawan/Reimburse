@@ -1,8 +1,4 @@
-import * as Updates from 'expo-updates';
-import * as FileSystem from 'expo-file-system';
-import * as IntentLauncher from 'expo-intent-launcher';
 import { Alert, Linking, Platform } from 'react-native';
-import Constants from 'expo-constants';
 import api from './api';
 
 export interface AppVersionInfo {
@@ -34,15 +30,15 @@ class UpdateService {
 
     /**
      * Check for OTA (Over-The-Air) updates via EAS Update
+     * Skipped on web — PWA updates handled by service worker
      */
     async checkOTAUpdate(): Promise<{ available: boolean; manifest?: any }> {
-        try {
-            // Skip in development mode
-            if (__DEV__) {
-                console.log('[UpdateService] Skipping OTA check in dev mode');
-                return { available: false };
-            }
+        if (Platform.OS === 'web' || __DEV__) {
+            return { available: false };
+        }
 
+        try {
+            const Updates = require('expo-updates');
             const update = await Updates.checkForUpdateAsync();
 
             if (update.isAvailable) {
@@ -58,16 +54,17 @@ class UpdateService {
     }
 
     /**
-     * Download and apply OTA update
+     * Download and apply OTA update (native only)
      */
     async applyOTAUpdate(): Promise<boolean> {
+        if (Platform.OS === 'web') return false;
+
         try {
+            const Updates = require('expo-updates');
             console.log('[UpdateService] Downloading OTA update...');
             await Updates.fetchUpdateAsync();
-
             console.log('[UpdateService] Reloading app with new update...');
             await Updates.reloadAsync();
-
             return true;
         } catch (error) {
             console.error('[UpdateService] Failed to apply OTA update:', error);
@@ -76,10 +73,13 @@ class UpdateService {
     }
 
     /**
-     * Check for APK update from backend
+     * Check for APK update from backend (Android only)
      */
     async checkAPKUpdate(): Promise<{ available: boolean; versionInfo?: AppVersionInfo }> {
+        if (Platform.OS === 'web') return { available: false };
+
         try {
+            const Constants = require('expo-constants').default;
             const currentVersion = Constants.expoConfig?.version || '1.0.0';
 
             const response = await api.get<{ data: AppVersionInfo }>('/api/app-version');
@@ -98,9 +98,11 @@ class UpdateService {
     }
 
     /**
-     * Prompt user to download APK update
+     * Prompt user to download APK update (Android only)
      */
     promptAPKDownload(versionInfo: AppVersionInfo): void {
+        if (Platform.OS === 'web') return;
+
         const message = versionInfo.release_notes
             ? `Versi ${versionInfo.version} tersedia!\n\n${versionInfo.release_notes}`
             : `Versi ${versionInfo.version} tersedia!`;
@@ -132,6 +134,8 @@ class UpdateService {
      * Prompt user for OTA update
      */
     promptOTAUpdate(onConfirm: () => void): void {
+        if (Platform.OS === 'web') return;
+
         Alert.alert(
             'Update Tersedia',
             'Ada pembaruan baru untuk aplikasi. Terapkan sekarang?',
@@ -149,20 +153,22 @@ class UpdateService {
     }
 
     /**
-     * Download and install APK
+     * Download and install APK (Android only)
      */
     async downloadAndInstallAPK(url: string, onProgress: (progress: number) => void): Promise<void> {
+        if (Platform.OS !== 'android') {
+            return;
+        }
+
         try {
-            if (Platform.OS !== 'android') {
-                Alert.alert('Error', 'Installasi APK hanya tersedia di Android');
-                return;
-            }
+            const FileSystem = require('expo-file-system');
+            const IntentLauncher = require('expo-intent-launcher');
 
             const downloadResumable = FileSystem.createDownloadResumable(
                 url,
                 ((FileSystem as any).documentDirectory || '') + 'app-update.apk',
                 {},
-                (downloadProgress) => {
+                (downloadProgress: any) => {
                     const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
                     onProgress(progress);
                 }
@@ -175,14 +181,13 @@ class UpdateService {
 
                 await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
                     data: contentUri,
-                    flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
+                    flags: 1,
                     type: 'application/vnd.android.package-archive',
                 });
             }
         } catch (error) {
             console.error('[UpdateService] Failed to download/install APK:', error);
             Alert.alert('Error', 'Gagal mendownload update. Silakan coba lagi.');
-            // Fallback to browser
             this.openDownloadUrl(url);
         }
     }
@@ -191,16 +196,17 @@ class UpdateService {
      * Open download URL in browser
      */
     public openDownloadUrl(url: string): void {
-        if (Platform.OS === 'android') {
-            Linking.openURL(url).catch((err) => {
-                console.error('[UpdateService] Failed to open download URL:', err);
-                Alert.alert('Error', 'Gagal membuka link download');
-            });
+        if (Platform.OS === 'web') {
+            window.open(url, '_blank');
+            return;
         }
+        Linking.openURL(url).catch((err) => {
+            console.error('[UpdateService] Failed to open download URL:', err);
+        });
     }
 
     /**
-     * Compare version strings (e.g., "1.0.1" > "1.0.0")
+     * Compare version strings
      */
     private isNewerVersion(latest: string, current: string): boolean {
         const latestParts = latest.split('.').map(Number);
@@ -218,10 +224,18 @@ class UpdateService {
     }
 
     /**
-     * Full update check - checks both OTA and APK
+     * Full update check — on web, always returns no update
      */
     async checkForUpdates(): Promise<UpdateCheckResult> {
-        // First, check for OTA updates (faster, no install required)
+        if (Platform.OS === 'web') {
+            return {
+                hasUpdate: false,
+                updateType: null,
+                isDownloading: false,
+                error: null,
+            };
+        }
+
         const otaResult = await this.checkOTAUpdate();
         if (otaResult.available) {
             return {
@@ -232,7 +246,6 @@ class UpdateService {
             };
         }
 
-        // Then, check for APK updates (requires manual install)
         const apkResult = await this.checkAPKUpdate();
         if (apkResult.available && apkResult.versionInfo) {
             return {

@@ -8,7 +8,7 @@ import { useCategoryStore } from '../../../store/categoryStore';
 import { reimbursementApi } from '../../../src/services';
 import { colors } from '../../../src/constants/theme';
 import { Reimbursement, Category } from '../../../src/types';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../../src/services/platformHaptics';
 
 export default function EditEntryScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();

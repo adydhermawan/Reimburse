@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Download, Share2, FileText, CheckCircle, Clock, CreditCard } from 'lucide-react-native';
 import { useReportStore } from '../../../store/reportStore';
 import { colors } from '../../../src/constants/theme';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../../src/services/platformHaptics';
 
 export default function ReportDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();

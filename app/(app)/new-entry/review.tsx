@@ -8,7 +8,7 @@ import { useNewEntryStore } from '../../../store/newEntryStore';
 import { useReimbursementStore } from '../../../store/reimbursementStore';
 import { useCategoryStore } from '../../../store/categoryStore';
 import { useOfflineSyncStore } from '../../../store/offlineSyncStore';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../../src/services/platformHaptics';
 
 export default function ReviewScreen() {
     const router = useRouter();

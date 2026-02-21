@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from './platformStorage';
 
 // Storage keys
 const TOKEN_KEY = 'auth_token';
@@ -84,6 +84,7 @@ const api: AxiosInstance = axios.create({
 // Request interceptor - Add auth token
 api.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
+        console.log('[API Request]', config.method?.toUpperCase(), config.url, 'Params:', config.params);
         const token = await getToken();
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;

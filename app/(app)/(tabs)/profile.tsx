@@ -6,7 +6,7 @@ import { User, Bell, Image, RefreshCw, Trash2, LogOut, ChevronRight, Settings } 
 import { useAuthStore } from '../../../store/authStore';
 import { useReimbursementStore } from '../../../store/reimbursementStore';
 import { colors } from '../../../src/constants/theme';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../../src/services/platformHaptics';
 
 export default function ProfileScreen() {
     const router = useRouter();

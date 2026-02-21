@@ -1,3 +1,62 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* iOS PWA Resets */
+@layer base {
+
+    html {
+        /* Scale down base font size for web to match native proportion */
+        font-size: 14px;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    html,
+    body,
+    #root {
+        height: 100dvh;
+    }
+
+    /* Hide scrollbars globally on web to prevent asymmetrical layout shifts */
+    ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+        display: none;
+    }
+
+    * {
+        scrollbar-width: none;
+        /* Firefox */
+        -ms-overflow-style: none;
+        /* IE/Edge */
+    }
+
+    body {
+        /* Prevent pull-to-refresh bounce on iOS */
+        overscroll-behavior-y: none;
+        background-color: #0D1117;
+        /* Match app background */
+    }
+
+    /* Prevent text selection and magnify glass everywhere */
+    * {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+
+    /* Re-enable text selection for inputs and textareas */
+    input,
+    textarea {
+        -webkit-user-select: auto;
+        user-select: auto;
+    }
+
+    /* Remove tap highlight color */
+    a,
+    button,
+    [role="button"] {
+        -webkit-tap-highlight-color: transparent;
+    }
+}
