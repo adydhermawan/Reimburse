@@ -296,6 +296,8 @@ export default function Dashboard() {
                     ) : (
                         entries.slice(0, 4).map((item) => {
                             const config = getStatusConfig(item.status);
+                            const isProcessingAI = parseFloat(item.amount) === 0 && (item.category?.name === 'Uncategorized' || item.category_name === 'Uncategorized');
+
                             return (
                                 <TouchableOpacity
                                     key={item.id}
@@ -308,22 +310,28 @@ export default function Dashboard() {
                                 >
                                     <View className="flex-row items-center flex-1 mr-4">
                                         <View className="w-10 h-10 bg-surface-elevated rounded-xl items-center justify-center mr-3 border border-white/5">
-                                            <FileText size={20} color={colors.textMuted} />
+                                            <FileText size={20} color={isProcessingAI ? colors.warning : colors.textMuted} />
                                         </View>
                                         <View className="flex-1">
                                             <Text className="text-white font-bold text-base" numberOfLines={1}>
                                                 {item.client?.name || 'Unknown Client'}
                                             </Text>
                                             <Text className="text-text-secondary text-xs">
-                                                {item.category?.name || item.category_name || 'No Category'} • {new Date(item.transaction_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                                {isProcessingAI ? 'Menunggu AI...' : (item.category?.name || item.category_name || 'No Category')} • {new Date(item.transaction_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                             </Text>
                                         </View>
                                     </View>
 
                                     <View className="items-end">
-                                        <Text className="text-white font-bold text-base mb-1">
-                                            Rp {new Intl.NumberFormat('id-ID').format(parseFloat(item.amount))}
-                                        </Text>
+                                        {isProcessingAI ? (
+                                            <Text className="text-warning font-bold text-xs mb-1 italic">
+                                                Memproses AI...
+                                            </Text>
+                                        ) : (
+                                            <Text className="text-white font-bold text-base mb-1">
+                                                Rp {new Intl.NumberFormat('id-ID').format(parseFloat(item.amount))}
+                                            </Text>
+                                        )}
                                         <View className={`px-2 py-0.5 rounded-md ${config.bg}`}>
                                             <Text className={`text-[10px] font-bold ${config.text}`}>
                                                 {config.label}

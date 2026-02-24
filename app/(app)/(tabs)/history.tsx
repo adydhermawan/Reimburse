@@ -268,6 +268,8 @@ export default function HistoryScreen() {
                 )}
                 renderItem={({ item }) => {
                     const config = statusColors[item.status] || statusColors.pending;
+                    const isProcessingAI = parseFloat(item.amount) === 0 && (item.category?.name === 'Uncategorized' || item.category_name === 'Uncategorized');
+
                     return (
                         <TouchableOpacity
                             onPress={() => {
@@ -278,22 +280,28 @@ export default function HistoryScreen() {
                         >
                             <View className="flex-row items-center flex-1 mr-4">
                                 <View className="w-10 h-10 bg-surface-elevated rounded-xl items-center justify-center mr-3 border border-white/5">
-                                    <FileText size={20} color="#6E7681" />
+                                    <FileText size={20} color={isProcessingAI ? "#EAB308" : "#6E7681"} />
                                 </View>
                                 <View className="flex-1">
                                     <Text className="text-white font-bold text-base" numberOfLines={1}>
                                         {item.client?.name || 'Unknown Client'}
                                     </Text>
                                     <Text className="text-text-secondary text-xs">
-                                        {item.category?.name || item.category_name || 'No Category'} • {formatDate(item.transaction_date)}
+                                        {isProcessingAI ? 'Menunggu AI...' : (item.category?.name || item.category_name || 'No Category')} • {formatDate(item.transaction_date)}
                                     </Text>
                                 </View>
                             </View>
 
                             <View className="items-end">
-                                <Text className="text-white font-bold text-base mb-1">
-                                    Rp {formatAmount(item.amount)}
-                                </Text>
+                                {isProcessingAI ? (
+                                    <Text className="text-yellow-500 font-bold text-xs mb-1 italic">
+                                        Memproses AI...
+                                    </Text>
+                                ) : (
+                                    <Text className="text-white font-bold text-base mb-1">
+                                        Rp {formatAmount(item.amount)}
+                                    </Text>
+                                )}
                                 <View className={`px-2 py-0.5 rounded-md ${config.bg}`}>
                                     <Text className={`text-[10px] font-bold ${config.text}`}>
                                         {config.label}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator, Modal, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar, Tag, Building2, Wallet, FileText, Camera, ArrowLeft, Check, AlertCircle } from 'lucide-react-native';
+import { Calendar, Tag, Building2, Wallet, FileText, Camera, ArrowLeft, Check, AlertCircle, MoreHorizontal, X } from 'lucide-react-native';
 import { useReimbursementStore } from '../../../store/reimbursementStore';
 import { useCategoryStore } from '../../../store/categoryStore';
 import { reimbursementApi } from '../../../src/services';
@@ -35,6 +36,13 @@ export default function EditEntryScreen() {
     const [amount, setAmount] = useState('');
     const [note, setNote] = useState('');
 
+    // New states for Date and Custom Category
+    const [transactionDate, setTransactionDate] = useState<Date>(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [customCategory, setCustomCategory] = useState('');
+    const [isOtherModalVisible, setIsOtherModalVisible] = useState(false);
+    const [isCustomCategory, setIsCustomCategory] = useState(false);
+
     // Fetch entry from API if not in store, or missing image_path
     useEffect(() => {
         fetchCategories();
@@ -54,6 +62,14 @@ export default function EditEntryScreen() {
             setCategoryId(entry.category_id);
             setAmount(entry.amount.toString());
             setNote(entry.note || '');
+
+            if (entry.transaction_date) {
+                setTransactionDate(new Date(entry.transaction_date));
+            }
+            if (entry.category_name && !entry.category_id) {
+                setIsCustomCategory(true);
+                setCustomCategory(entry.category_name);
+            }
         }
     }, [entry]);
 
@@ -67,8 +83,14 @@ export default function EditEntryScreen() {
             return;
         }
 
-        if (!categoryId) {
+        if (!categoryId && !isCustomCategory) {
             setLocalError('Kategori harus dipilih.');
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            return;
+        }
+
+        if (isCustomCategory && !customCategory.trim()) {
+            setLocalError('Nama kategori baru harus diisi.');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             return;
         }
@@ -79,12 +101,20 @@ export default function EditEntryScreen() {
             return;
         }
 
-        const success = await updateReimbursement(numericId, {
+        const payload: any = {
             client_name: clientName.trim(),
-            category_id: categoryId,
             amount: parseFloat(amount),
+            transaction_date: transactionDate.toISOString().split('T')[0],
             note: note.trim() || undefined,
-        });
+        };
+
+        if (isCustomCategory && customCategory.trim()) {
+            payload.category_name = customCategory.trim();
+        } else {
+            payload.category_id = categoryId;
+        }
+
+        const success = await updateReimbursement(numericId, payload);
 
         if (success) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -223,19 +253,68 @@ export default function EditEntryScreen() {
                                     onPress={() => {
                                         Haptics.selectionAsync();
                                         setCategoryId(cat.id);
+                                        setIsCustomCategory(false);
                                     }}
-                                    className={`px-3 py-2 rounded-lg border ${categoryId === cat.id
+                                    className={`px-3 py-2 rounded-lg border ${categoryId === cat.id && !isCustomCategory
                                         ? 'bg-primary border-primary'
                                         : 'bg-surface-elevated border-white/10'
                                         }`}
                                 >
-                                    <Text className={`text-sm font-medium ${categoryId === cat.id ? 'text-background' : 'text-white'
+                                    <Text className={`text-sm font-medium ${categoryId === cat.id && !isCustomCategory ? 'text-background' : 'text-white'
                                         }`}>
                                         {cat.icon} {cat.name}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
+
+                            {/* Custom Category Button */}
+                            <TouchableOpacity
+                                onPress={() => {
+                                    Haptics.selectionAsync();
+                                    setIsOtherModalVisible(true);
+                                }}
+                                className={`px-3 py-2 rounded-lg border flex-row items-center ${isCustomCategory ? 'bg-primary border-primary' : 'bg-surface-elevated border-white/10'}`}
+                            >
+                                {isCustomCategory && customCategory ? (
+                                    <Text className="text-sm font-medium text-background">
+                                        ✨ {customCategory}
+                                    </Text>
+                                ) : (
+                                    <View className="flex-row items-center">
+                                        <MoreHorizontal size={14} color={colors.text} />
+                                        <Text className="text-sm font-medium text-white ml-2">Lainnya</Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
                         </View>
+                    </View>
+
+                    {/* Date Input */}
+                    <View className="bg-surface p-4 rounded-2xl border border-white/5 mb-3">
+                        <View className="flex-row items-center mb-2">
+                            <Calendar size={16} color="#8B949E" />
+                            <Text className="text-text-secondary text-xs ml-2">TANGGAL</Text>
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => setShowDatePicker(true)}
+                            className="bg-background border border-white/10 rounded-xl px-4 py-3 flex-row justify-between items-center"
+                        >
+                            <Text className="text-white font-bold text-lg">
+                                {transactionDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </Text>
+                        </TouchableOpacity>
+
+                        {showDatePicker && (
+                            <DateTimePicker
+                                value={transactionDate}
+                                mode="date"
+                                display="default"
+                                onChange={(event, selectedDate) => {
+                                    setShowDatePicker(Platform.OS === 'ios');
+                                    if (selectedDate) setTransactionDate(selectedDate);
+                                }}
+                            />
+                        )}
                     </View>
 
                     {/* Amount Input */}
@@ -326,7 +405,51 @@ export default function EditEntryScreen() {
                         )}
                     </TouchableOpacity>
                 </View>
-            </View>
+
+                {/* Custom Category Modal */}
+                <Modal
+                    visible={isOtherModalVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setIsOtherModalVisible(false)}
+                >
+                    <View className="flex-1 bg-black/80 justify-center px-5">
+                        <View className="bg-surface p-6 rounded-3xl border border-white/10">
+                            <View className="flex-row justify-between items-center mb-6">
+                                <Text className="text-white text-xl font-bold">Kategori Lainnya</Text>
+                                <TouchableOpacity
+                                    onPress={() => setIsOtherModalVisible(false)}
+                                    className="w-8 h-8 bg-surface-elevated rounded-full items-center justify-center"
+                                >
+                                    <X size={20} color={colors.textSecondary} />
+                                </TouchableOpacity>
+                            </View>
+
+                            <TextInput
+                                className="bg-background border border-white/10 rounded-xl px-4 py-3 text-white mb-6"
+                                placeholder="Masukkan nama kategori"
+                                placeholderTextColor="#6E7681"
+                                value={customCategory}
+                                onChangeText={setCustomCategory}
+                                autoFocus
+                            />
+
+                            <TouchableOpacity
+                                className="bg-primary p-4 rounded-2xl flex-row items-center justify-center active:opacity-80"
+                                onPress={() => {
+                                    if (customCategory.trim()) {
+                                        setIsCustomCategory(true);
+                                        setCategoryId(null);
+                                        setIsOtherModalVisible(false);
+                                    }
+                                }}
+                            >
+                                <Text className="text-background font-bold text-lg">Simpan</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+            </View >
         </>
     );
 }
