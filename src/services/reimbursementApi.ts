@@ -291,6 +291,17 @@ export const reimbursementApi = {
         });
         return response.data;
     },
+
+    /**
+     * Trigger background AI processing for a created draft.
+     * The client calls this but doesn't need to await it for navigation.
+     */
+    processDraftReceipt: async (draftId: number, meta: { absolute_path: string, mime_type: string, provider: string }): Promise<ApiResponse<any>> => {
+        const response = await api.post<ApiResponse<any>>(`/reimbursements/${draftId}/process-ai`, meta, {
+            timeout: 120000, // Long timeout since AI can take up to 20-30s sometimes
+        });
+        return response.data;
+    },
 };
 
 export default reimbursementApi;

@@ -177,7 +177,14 @@ export default function ScanScreen() {
             setCompressionStatus('Mengirim struk ke server...');
             const response = await reimbursementApi.draftScanReceipt(finalImageUri, finalImageFile);
 
-            if (response.success) {
+            if (response.success && response.data) {
+                // Trigger the actual AI Processing asynchronously WITHOUT awaiting it.
+                // This allows the user to leave the screen immediately while the backend works on it.
+                if (response.meta) {
+                    reimbursementApi.processDraftReceipt(response.data.id, response.meta)
+                        .catch(err => console.error('Background async processing failed:', err));
+                }
+
                 // Clear form state completely
                 useNewEntryStore.getState().reset();
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
