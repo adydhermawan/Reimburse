@@ -264,6 +264,33 @@ export const reimbursementApi = {
         });
         return response.data;
     },
+
+    /**
+     * Start a background AI scan
+     * Returns the draft reimbursement immediately while AI processes in the background
+     */
+    draftScanReceipt: async (imageUri: string, imageFile?: File): Promise<ApiResponse<any>> => {
+        const formData = new FormData();
+
+        const filename = imageUri.split('/').pop() || 'receipt.jpg';
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+        await appendImageToFormDataAsync(
+            formData,
+            'image',
+            { uri: imageUri, type, name: filename },
+            imageFile
+        );
+
+        const response = await api.post<ApiResponse<any>>('/reimbursements/draft-scan', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            timeout: 60000,
+        });
+        return response.data;
+    },
 };
 
 export default reimbursementApi;

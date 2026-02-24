@@ -30,6 +30,7 @@ export default function ScanScreen() {
     const [image, setImage] = useState<string | null>(null);
     const [localImageFile, setLocalImageFile] = useState<any>(undefined);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [isBackgroundAnalyzing, setIsBackgroundAnalyzing] = useState(false);
 
     const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
 
@@ -144,6 +145,71 @@ export default function ScanScreen() {
         }
     };
 
+    const processBackground = async () => {
+        if (!image) return;
+
+        setIsBackgroundAnalyzing(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+        try {
+            setCompressionStatus('Mempersiapkan proses background...');
+            let finalImageUri = image;
+            let finalImageFile = localImageFile;
+
+            try {
+                const compressed = await compressImage(image, (progress) => {
+                    if (progress.step === 'compressing') {
+                        setCompressionStatus('Mengkompresi gambar...');
+                    }
+                });
+                finalImageUri = compressed.uri;
+                if (Platform.OS === 'web') {
+                    const res = await fetch(compressed.uri);
+                    const blob = await res.blob();
+                    finalImageFile = new File([blob], localImageFile?.name || 'receipt.jpg', { type: blob.type });
+                } else {
+                    finalImageFile = undefined;
+                }
+            } catch (err) {
+                console.error("Compression failed before AI scan, using original", err);
+            }
+
+            setCompressionStatus('Mengirim struk ke server...');
+            const response = await reimbursementApi.draftScanReceipt(finalImageUri, finalImageFile);
+
+            if (response.success) {
+                // Clear form state completely
+                useNewEntryStore.getState().reset();
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+                if (Platform.OS === 'web') {
+                    window.alert('Berhasil! Struk Anda sedang diproses oleh AI di layar belakang. Hasilnya akan otomatis muncul di menu Riwayat.');
+                } else {
+                    Alert.alert(
+                        'Selesai',
+                        'Struk Anda sedang diproses oleh AI di layar belakang. Hasilnya akan otomatis muncul di menu Riwayat.',
+                        [{ text: 'OK' }]
+                    );
+                }
+
+                // Immediately return to Dashboard
+                router.replace('/(app)/(tabs)');
+            } else {
+                throw new Error('Failed to initiate background scan');
+            }
+        } catch (error) {
+            console.error('Background Scan Error:', error);
+            if (Platform.OS === 'web') {
+                window.alert('Gagal menginisiasi AI di background. Silakan coba lagi.');
+            } else {
+                Alert.alert('Scan Failed', 'Gagal menginisiasi AI di background. Silakan coba lagi.');
+            }
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        } finally {
+            setIsBackgroundAnalyzing(false);
+        }
+    };
+
     return (
         <ScreenWrapper className="px-5 py-4">
             {/* Header */}
@@ -201,29 +267,45 @@ export default function ScanScreen() {
                                     resizeMode="contain"
                                 />
                                 {isAnalyzing && (
-                                    <View className="absolute inset-0 bg-black/60 items-center justify-center">
+                                    <View className="absolute inset-0 bg-black/60 items-center justify-center p-4">
                                         <ActivityIndicator size="large" color={colors.primary} />
-                                        <Text className="text-white font-bold mt-4 text-lg">{compressionStatus || 'Menganalisa Struk...'}</Text>
-                                        <Text className="text-primary text-sm mt-1">Estimasi: 5-10 detik</Text>
+                                        <Text className="text-white font-bold mt-4 text-lg text-center">{compressionStatus || 'Menganalisa Struk...'}</Text>
+                                        <Text className="text-primary text-sm mt-1">Mohon tunggu 5-10 detik...</Text>
+                                    </View>
+                                )}
+                                {isBackgroundAnalyzing && (
+                                    <View className="absolute inset-0 bg-black/60 items-center justify-center p-4">
+                                        <ActivityIndicator size="large" color={colors.primary} />
+                                        <Text className="text-white font-bold mt-4 text-lg text-center">{compressionStatus || 'Mempersiapkan...'}</Text>
+                                        <Text className="text-primary text-sm mt-1 font-bold">Anda bisa meninggalkan halaman ini</Text>
                                     </View>
                                 )}
                             </View>
 
-                            {!isAnalyzing && (
+                            {!isAnalyzing && !isBackgroundAnalyzing && (
                                 <View className="w-full gap-3">
                                     <TouchableOpacity
-                                        onPress={processReceipt}
-                                        className="bg-primary p-4 rounded-2xl flex-row items-center justify-center mb-2"
+                                        onPress={processBackground}
+                                        className="bg-primary p-4 rounded-2xl flex-row items-center justify-center mb-2 shadow-lg"
                                         activeOpacity={0.8}
                                     >
-                                        <Check size={24} color={colors.background} />
-                                        <Text className="text-background font-bold text-lg ml-3">Proses Struk</Text>
+                                        <ScanLine size={24} color={colors.background} />
+                                        <Text className="text-background font-bold text-lg ml-3">Proses di Belakang Layar</Text>
                                     </TouchableOpacity>
 
                                     <View className="flex-row gap-3">
                                         <TouchableOpacity
+                                            onPress={processReceipt}
+                                            className="flex-[1.5] border-2 border-primary/50 p-4 rounded-2xl flex-row items-center justify-center bg-primary/10"
+                                            activeOpacity={0.8}
+                                        >
+                                            <Check size={20} color={colors.primary} />
+                                            <Text className="text-primary font-bold ml-2">Tunggu & Isi</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
                                             onPress={() => { setImage(null); setLocalImageFile(undefined); }}
-                                            className="flex-1 bg-surface-elevated p-4 rounded-2xl flex-row items-center justify-center"
+                                            className="flex-1 bg-surface-elevated border border-white/10 p-4 rounded-2xl flex-row items-center justify-center"
                                             activeOpacity={0.8}
                                         >
                                             <RefreshCw size={20} color={colors.text} />
