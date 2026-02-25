@@ -247,7 +247,9 @@ export const reimbursementApi = {
 
         const filename = imageUri.split('/').pop() || 'receipt.jpg';
         const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        let ext = match ? match[1].toLowerCase() : 'jpeg';
+        if (ext === 'jpg') ext = 'jpeg'; // Android FormData bug: must be exactly image/jpeg
+        const type = `image/${ext}`;
 
         await appendImageToFormDataAsync(
             formData,
@@ -274,7 +276,9 @@ export const reimbursementApi = {
 
         const filename = imageUri.split('/').pop() || 'receipt.jpg';
         const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        let ext = match ? match[1].toLowerCase() : 'jpeg';
+        if (ext === 'jpg') ext = 'jpeg'; // Android FormData bug: must be exactly image/jpeg
+        const type = `image/${ext}`;
 
         await appendImageToFormDataAsync(
             formData,
