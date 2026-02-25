@@ -28,6 +28,7 @@ const defaultCategoryColors = [
 ];
 
 export default function Dashboard() {
+    const [refreshing, setRefreshing] = useState(false);
     const router = useRouter();
     const user = useAuthStore((state) => state.user);
     const {
@@ -57,6 +58,7 @@ export default function Dashboard() {
 
     const onRefresh = useCallback(async () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setRefreshing(true);
         await Promise.all([
             fetchDashboardSummary(),
             fetchReimbursements({ page: 1 }),
@@ -68,6 +70,7 @@ export default function Dashboard() {
             syncPendingSubmissions();
         }
 
+        setRefreshing(false);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }, [isOnline, pendingCount]);
 
@@ -166,7 +169,9 @@ export default function Dashboard() {
                 contentContainerClassName="px-5 pt-2"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={isLoading} onRefresh={onRefresh} tintColor={colors.primary} />
+                    Platform.OS === 'web' ? undefined : (
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+                    )
                 }
             >
                 {/* Header */}

@@ -295,23 +295,67 @@ export default function EditEntryScreen() {
                             <Calendar size={16} color="#8B949E" />
                             <Text className="text-text-secondary text-xs ml-2">TANGGAL</Text>
                         </View>
-                        <TouchableOpacity
-                            onPress={() => setShowDatePicker(true)}
-                            className="bg-background border border-white/10 rounded-xl px-4 py-3 flex-row justify-between items-center"
-                        >
-                            <Text className="text-white font-bold text-lg">
-                                {transactionDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                            </Text>
-                        </TouchableOpacity>
+                        {Platform.OS === 'web' ? (
+                            React.createElement('input', {
+                                type: 'date',
+                                value: transactionDate.toISOString().split('T')[0],
+                                onChange: (e: any) => {
+                                    if (e.target.value) {
+                                        setTransactionDate(new Date(e.target.value));
+                                    }
+                                },
+                                style: {
+                                    backgroundColor: 'transparent',
+                                    color: 'white',
+                                    fontSize: 18,
+                                    fontWeight: 'bold',
+                                    border: 'none',
+                                    outline: 'none',
+                                    width: '100%',
+                                    colorScheme: 'dark',
+                                    padding: '12px 16px',
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(255,255,255,0.1)'
+                                }
+                            })
+                        ) : (
+                            <TouchableOpacity
+                                onPress={() => setShowDatePicker(true)}
+                                className="bg-background border border-white/10 rounded-xl px-4 py-3 flex-row justify-between items-center"
+                            >
+                                <Text className="text-white font-bold text-lg">
+                                    {transactionDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
 
-                        {showDatePicker && (
+                        {Platform.OS === 'ios' && showDatePicker && (
+                            <View className="bg-background border border-white/10 rounded-xl mt-3 overflow-hidden">
+                                <DateTimePicker
+                                    value={transactionDate}
+                                    mode="date"
+                                    display="spinner"
+                                    onChange={(event, selectedDate) => {
+                                        if (selectedDate) setTransactionDate(selectedDate);
+                                    }}
+                                    textColor="#FFFFFF"
+                                />
+                                <TouchableOpacity
+                                    className="bg-primary p-3 items-center"
+                                    onPress={() => setShowDatePicker(false)}
+                                >
+                                    <Text className="text-background font-bold">Selesai</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                        {Platform.OS === 'android' && showDatePicker && (
                             <DateTimePicker
                                 value={transactionDate}
                                 mode="date"
                                 display="default"
                                 onChange={(event, selectedDate) => {
-                                    setShowDatePicker(Platform.OS === 'ios');
-                                    if (selectedDate) setTransactionDate(selectedDate);
+                                    setShowDatePicker(false);
+                                    if (event.type === 'set' && selectedDate) setTransactionDate(selectedDate);
                                 }}
                             />
                         )}
@@ -426,7 +470,7 @@ export default function EditEntryScreen() {
                             </View>
 
                             <TextInput
-                                className="bg-background border border-white/10 rounded-xl px-4 py-3 text-white mb-6"
+                                className="bg-background border border-white/10 rounded-xl px-4 py-3 text-white text-base mb-6"
                                 placeholder="Masukkan nama kategori"
                                 placeholderTextColor="#6E7681"
                                 value={customCategory}

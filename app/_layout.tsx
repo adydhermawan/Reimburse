@@ -38,10 +38,15 @@ function usePWAInit() {
             }
         });
 
-        // Ensure viewport-fit=cover for safe-area-inset support on iPhone
+        // Ensure viewport-fit=cover for safe-area-inset support on iPhone and prevent zooming
         const viewport = document.querySelector('meta[name="viewport"]');
-        if (viewport && !viewport.getAttribute('content')?.includes('viewport-fit')) {
-            viewport.setAttribute('content', viewport.getAttribute('content') + ', viewport-fit=cover');
+        if (viewport) {
+            viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover');
+        } else {
+            const meta = document.createElement('meta');
+            meta.name = 'viewport';
+            meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover';
+            document.head.appendChild(meta);
         }
 
         // Apple touch icon

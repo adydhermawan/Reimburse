@@ -9,7 +9,7 @@ export default function TabLayout() {
 
     // Add extra padding for iOS to account for the home indicator and web for mobile browser toolbars
     const bottomPadding = Platform.OS === 'ios' ? Math.max(insets.bottom, 16) :
-        Platform.OS === 'web' ? insets.bottom : 8;
+        Platform.OS === 'web' ? insets.bottom : Math.max(insets.bottom, 8);
     // Base height + dynamic padding
     const tabHeight = 60 + bottomPadding;
 
