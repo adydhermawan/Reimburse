@@ -20,6 +20,7 @@ interface AuthState {
     login: (email: string, password: string) => Promise<boolean>;
     register: (name: string, email: string, password: string, passwordConfirmation: string) => Promise<boolean>;
     logout: () => Promise<void>;
+    updateProfile: (data: { preferred_ai_model?: string }) => Promise<boolean>;
     clearError: () => void;
 }
 
@@ -228,7 +229,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     /**
-     * Clear error message
+     * Update user profile
+     */
+    updateProfile: async (data: { preferred_ai_model?: string }) => {
+        set({ isLoading: true, error: null });
+        try {
+            const result = await authApi.updateProfile(data);
+            if (result.success && result.data.user) {
+                set({ user: result.data.user, isLoading: false });
+                return true;
+            }
+            set({ error: result.message || 'Gagal memperbarui profil', isLoading: false });
+            return false;
+        } catch (error: any) {
+            set({
+                error: error.response?.data?.message || 'Terjadi kesalahan saat memperbarui profil',
+                isLoading: false
+            });
+            return false;
+        }
+    },
+
+    /**
+     * Clear current error message
      */
     clearError: () => {
         set({ error: null });

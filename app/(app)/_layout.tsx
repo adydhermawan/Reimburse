@@ -37,6 +37,13 @@ export default function AppLayout() {
                 }}
             />
             <Stack.Screen
+                name="settings-ai"
+                options={{
+                    headerShown: false,
+                    presentation: 'card',
+                }}
+            />
+            <Stack.Screen
                 name="entry/[id]"
                 options={{
                     presentation: 'card',

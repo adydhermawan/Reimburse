@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Bell, Image, RefreshCw, Trash2, LogOut, ChevronRight, Settings } from 'lucide-react-native';
+import { User, Bell, Image, RefreshCw, Trash2, LogOut, ChevronRight, Settings, Sparkles } from 'lucide-react-native';
 import { useAuthStore } from '../../../store/authStore';
 import { useReimbursementStore } from '../../../store/reimbursementStore';
 import { colors } from '../../../src/constants/theme';
@@ -81,6 +81,7 @@ export default function ProfileScreen() {
     };
 
     const menuItems = [
+        { icon: Sparkles, label: 'Pengaturan Model AI', onPress: () => { Haptics.selectionAsync(); router.push('/(app)/settings-ai'); } },
         { icon: Bell, label: 'Notifikasi', onPress: () => { Haptics.selectionAsync(); Alert.alert('Info', 'Pengaturan notifikasi akan tersedia segera.'); } },
         { icon: Image, label: 'Kualitas Kompresi', onPress: () => { Haptics.selectionAsync(); Alert.alert('Info', 'Pengaturan kompresi akan tersedia segera.'); } },
         { icon: RefreshCw, label: 'Sinkronisasi Data', onPress: handleSync },

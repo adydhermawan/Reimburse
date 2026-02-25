@@ -71,6 +71,20 @@ export const authApi = {
         const response = await api.get<ApiResponse<{ user: User }>>('/auth/me');
         return response.data;
     },
+
+    /**
+     * Update user profile settings
+     */
+    updateProfile: async (data: { preferred_ai_model?: string }): Promise<ApiResponse<{ user: User }>> => {
+        const response = await api.put<ApiResponse<{ user: User }>>('/auth/me', data);
+
+        // Update user data in cache
+        if (response.data.success && response.data.data.user) {
+            await setUserData(response.data.data.user);
+        }
+
+        return response.data;
+    },
 };
 
 export default authApi;
