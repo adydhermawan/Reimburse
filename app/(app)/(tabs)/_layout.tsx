@@ -18,6 +18,7 @@ export default function TabLayout() {
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
+                    position: 'absolute',
                     backgroundColor: '#161B22',
                     borderTopWidth: 0,  // Remove border line completely
                     elevation: 0,       // Android shadow removal

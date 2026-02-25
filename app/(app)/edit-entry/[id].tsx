@@ -104,7 +104,7 @@ export default function EditEntryScreen() {
         const payload: any = {
             client_name: clientName.trim(),
             amount: parseFloat(amount),
-            transaction_date: transactionDate.toISOString().split('T')[0],
+            transaction_date: formatDateLocal(transactionDate),
             note: note.trim() || undefined,
         };
 
@@ -130,6 +130,14 @@ export default function EditEntryScreen() {
     const formatAmount = (value: string) => {
         const numericValue = value.replace(/[^0-9]/g, '');
         setAmount(numericValue);
+    };
+
+    // Format date as YYYY-MM-DD in LOCAL timezone (avoid UTC -1 day shift)
+    const formatDateLocal = (date: Date): string => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     };
 
     const displayedAmount = amount ? new Intl.NumberFormat('id-ID').format(parseFloat(amount)) : '';
