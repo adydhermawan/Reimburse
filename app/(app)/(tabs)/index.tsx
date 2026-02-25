@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../store/authStore';
 import { useReimbursementStore } from '../../../store/reimbursementStore';
@@ -168,11 +168,9 @@ export default function Dashboard() {
                 className="flex-1"
                 contentContainerClassName="px-5 pt-2"
                 showsVerticalScrollIndicator={false}
-                refreshControl={
-                    Platform.OS === 'web' ? undefined : (
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-                    )
-                }
+                refreshControl={Platform.OS !== 'web' ? (
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+                ) : undefined}
             >
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-6 mt-2">
