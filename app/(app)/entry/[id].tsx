@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator, Platform, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar, Tag, Building2, Wallet, Camera, FileText, Trash2, Edit3, AlertCircle } from 'lucide-react-native';
+import { Calendar, Tag, Building2, Wallet, Camera, FileText, Trash2, Edit3, AlertCircle, RefreshCw, Sparkles, ChevronRight, X, Check } from 'lucide-react-native';
 import { useReimbursementStore } from '../../../store/reimbursementStore';
+import { useAuthStore } from '../../../store/authStore';
 import { reimbursementApi } from '../../../src/services';
 import { colors } from '../../../src/constants/theme';
 import { Reimbursement } from '../../../src/types';
+import { AI_MODELS } from '../../../src/constants/aiModels';
+import * as Haptics from '../../../src/services/platformHaptics';
 
 // Status colors matching API status values
 const statusColors: Record<string, { bg: string; text: string; label: string }> = {
@@ -31,10 +34,27 @@ export default function EntryDetailScreen() {
     const getEntryById = useReimbursementStore((state) => state.getEntryById);
     const fetchReimbursementById = useReimbursementStore((state) => state.fetchReimbursementById);
     const deleteReimbursement = useReimbursementStore((state) => state.deleteReimbursement);
-    const error = useReimbursementStore((state) => state.error);
+    const reprocessReimbursement = useReimbursementStore((state) => state.reprocessReimbursement);
+    const isSubmitting = useReimbursementStore((state) => state.isSubmitting);
+    const storeError = useReimbursementStore((state) => state.error);
+
+    // Get user and auth update profile
+    const { user, updateProfile } = useAuthStore();
 
     // Local state for entry
     const [entry, setEntry] = useState<Reimbursement | null | undefined>(() => getEntryById(numericId));
+
+    // Reprocessing AI States
+    const [showModelModal, setShowModelModal] = useState(false);
+    const [selectedModel, setSelectedModel] = useState<string>(user?.preferred_ai_model || 'gemini-3.5-flash');
+    const [isReprocessing, setIsReprocessing] = useState(false);
+
+    // Update selected model when user preferred model changes
+    useEffect(() => {
+        if (user?.preferred_ai_model) {
+            setSelectedModel(user.preferred_ai_model);
+        }
+    }, [user?.preferred_ai_model]);
 
     // Fetch from API if not in store, or if it's missing image_path (due to list optimization)
     useEffect(() => {
@@ -49,6 +69,8 @@ export default function EntryDetailScreen() {
 
     // Check if entry can be edited/deleted (only pending status)
     const canModify = entry?.status === 'pending';
+    const isProcessingAI = entry && parseFloat(entry.amount) === 0 && 
+        (entry.category?.name === 'Uncategorized' || entry.category_name === 'Uncategorized');
 
     if (isLoading) {
         return (
@@ -116,9 +138,9 @@ export default function EntryDetailScreen() {
                 }
             } else {
                 if (Platform.OS === 'web') {
-                    window.alert(error || 'Gagal menghapus reimbursement');
+                    window.alert(storeError || 'Gagal menghapus reimbursement');
                 } else {
-                    Alert.alert('Gagal', error || 'Gagal menghapus reimbursement');
+                    Alert.alert('Gagal', storeError || 'Gagal menghapus reimbursement');
                 }
             }
         } catch (e: any) {
@@ -129,6 +151,52 @@ export default function EntryDetailScreen() {
             }
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const handleReprocess = async () => {
+        if (!entry || !entry.image_path) return;
+        
+        setIsReprocessing(true);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+        try {
+            // 1. Update preferred model if changed
+            if (selectedModel !== user?.preferred_ai_model) {
+                const profileSuccess = await updateProfile({ preferred_ai_model: selectedModel });
+                if (!profileSuccess) {
+                    console.log('Failed to update preferred AI model on server, but continuing to reprocess...');
+                }
+            }
+
+            // 2. Call reprocess
+            const updatedEntry = await reprocessReimbursement(numericId, selectedModel, entry.image_path);
+            
+            if (updatedEntry) {
+                setEntry(updatedEntry);
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                if (Platform.OS === 'web') {
+                    window.alert('Berhasil memproses ulang struk dengan AI!');
+                } else {
+                    Alert.alert('Berhasil', 'Berhasil memproses ulang struk dengan AI!');
+                }
+            } else {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                if (Platform.OS === 'web') {
+                    window.alert(storeError || 'Gagal memproses ulang struk');
+                } else {
+                    Alert.alert('Gagal', storeError || 'Gagal memproses ulang struk');
+                }
+            }
+        } catch (e: any) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            if (Platform.OS === 'web') {
+                window.alert(e.message || 'Terjadi kesalahan');
+            } else {
+                Alert.alert('Error', e.message || 'Terjadi kesalahan');
+            }
+        } finally {
+            setIsReprocessing(false);
         }
     };
 
@@ -188,6 +256,19 @@ export default function EntryDetailScreen() {
                         )}
                     </View>
 
+                    {/* Stuck AI Warning Banner */}
+                    {isProcessingAI && (
+                        <View className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-2xl mb-6 flex-row items-start">
+                            <AlertCircle size={20} color="#EAB308" style={{ marginRight: 12, marginTop: 2 }} />
+                            <View className="flex-1">
+                                <Text className="text-yellow-500 font-bold text-sm">Analisis AI Tertunda / Gagal</Text>
+                                <Text className="text-text-secondary text-xs mt-1 leading-relaxed">
+                                    AI gagal mengekstrak data dari struk ini. Silakan coba proses ulang menggunakan model AI yang lebih baru di bawah ini.
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
                     {/* Detail Cards */}
                     <View className="bg-surface p-4 rounded-2xl border border-white/5 mb-3">
                         <View className="flex-row items-center mb-2">
@@ -228,6 +309,59 @@ export default function EntryDetailScreen() {
                                 <Text className="text-text-secondary text-xs ml-2">CATATAN</Text>
                             </View>
                             <Text className="text-white">{entry.note}</Text>
+                        </View>
+                    )}
+
+                    {/* AI Reprocessing Section */}
+                    {canModify && entry.image_path && (
+                        <View className="bg-surface p-4 rounded-2xl border border-white/5 mb-3">
+                            <View className="flex-row items-center mb-3">
+                                <Sparkles size={16} color={colors.primary} />
+                                <Text className="text-text-secondary text-xs ml-2 font-bold uppercase tracking-wider">Proses Ulang AI</Text>
+                            </View>
+                            
+                            <Text className="text-text-muted text-sm mb-4 leading-relaxed">
+                                Kirim ulang struk ini ke AI untuk ekstraksi otomatis (merchant, nominal, kategori, dan tanggal).
+                            </Text>
+
+                            {/* Active Model Selector trigger */}
+                            <TouchableOpacity
+                                onPress={() => {
+                                    Haptics.selectionAsync();
+                                    setShowModelModal(true);
+                                }}
+                                className="bg-background border border-white/10 rounded-xl p-3 flex-row justify-between items-center mb-4"
+                            >
+                                <View className="flex-row items-center">
+                                    <Sparkles size={16} color={colors.primary} />
+                                    <View className="ml-3">
+                                        <Text className="text-text-secondary text-xs">Model AI Terpilih</Text>
+                                        <Text className="text-white font-bold text-sm mt-0.5">
+                                            {AI_MODELS.find(m => m.id === selectedModel)?.name || selectedModel}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <ChevronRight size={18} color="#8B949E" />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={handleReprocess}
+                                disabled={isReprocessing || isSubmitting}
+                                className={`w-full rounded-xl flex-row items-center justify-center ${isReprocessing || isSubmitting ? 'bg-primary/50' : 'bg-primary'}`}
+                                style={{ height: 50 }}
+                            >
+                                {isReprocessing || isSubmitting ? (
+                                    <>
+                                        <ActivityIndicator size="small" color="#0D1117" style={{ marginRight: 8 }} />
+                                        <Text className="text-background font-bold text-base">Menganalisa Struk...</Text>
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw size={18} color="#0D1117" style={{ marginRight: 8 }} />
+                                        <Text className="text-background font-bold text-base">Proses Ulang dengan AI</Text>
+                                    </>
+                                )}
+                            </TouchableOpacity>
                         </View>
                     )}
 
@@ -302,6 +436,61 @@ export default function EntryDetailScreen() {
                     </View>
                 )}
             </View>
+
+            {/* Model Selection Modal */}
+            <Modal
+                visible={showModelModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowModelModal(false)}
+            >
+                <View className="flex-1 bg-black/60 justify-end">
+                    <View className="bg-surface rounded-t-3xl p-5 pb-10" style={{ maxHeight: '80%' }}>
+                        <View className="flex-row justify-between items-center mb-4">
+                            <Text className="text-white text-xl font-bold">Pilih Model AI</Text>
+                            <TouchableOpacity onPress={() => setShowModelModal(false)}>
+                                <X size={24} color="#8B949E" />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <ScrollView showsVerticalScrollIndicator={false} className="mb-4">
+                            {AI_MODELS.map((model) => {
+                                const isSelected = selectedModel === model.id;
+                                return (
+                                    <TouchableOpacity
+                                        key={model.id}
+                                        onPress={() => {
+                                            Haptics.selectionAsync();
+                                            setSelectedModel(model.id);
+                                        }}
+                                        className={`p-4 rounded-xl border ${isSelected ? 'border-primary bg-surface-elevated' : 'border-white/5 bg-transparent'} mb-3 flex-row justify-between items-center`}
+                                    >
+                                        <View className="flex-1 mr-3">
+                                            <View className="flex-row items-center mb-1">
+                                                <Text className="text-white font-semibold text-base mr-2">{model.name}</Text>
+                                                <View className="bg-surface px-2 py-0.5 rounded-full">
+                                                    <Text className="text-text-secondary text-[10px] font-medium">{model.limit}</Text>
+                                                </View>
+                                            </View>
+                                            <Text className="text-text-secondary text-xs leading-relaxed">{model.description}</Text>
+                                        </View>
+                                        <View className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? 'border-primary bg-primary' : 'border-text-secondary'}`}>
+                                            {isSelected && <Check color="#000" size={12} strokeWidth={3} />}
+                                        </View>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+
+                        <TouchableOpacity
+                            className="bg-primary p-4 rounded-xl items-center"
+                            onPress={() => setShowModelModal(false)}
+                        >
+                            <Text className="text-background font-bold text-base">Pilih Model Ini</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </>
     );
 }

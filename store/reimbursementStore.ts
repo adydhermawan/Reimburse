@@ -71,6 +71,7 @@ interface ReimbursementState {
     deleteReimbursement: (id: number) => Promise<boolean>;
     getEntryById: (id: number) => Reimbursement | undefined;
     fetchReimbursementById: (id: number) => Promise<Reimbursement | null>;
+    reprocessReimbursement: (id: number, modelId: string, imagePath: string) => Promise<Reimbursement | null>;
     clearError: () => void;
     reset: () => void;
 }
@@ -280,6 +281,56 @@ export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
             return null;
         } catch (error) {
             console.error('Failed to fetch reimbursement:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Reprocess reimbursement receipt with AI using specified model
+     */
+    reprocessReimbursement: async (id, modelId, imagePath) => {
+        set({ isSubmitting: true, error: null });
+
+        try {
+            const ext = imagePath.split('.').pop()?.toLowerCase() || 'jpeg';
+            const mimeType = `image/${ext === 'png' ? 'png' : 'jpeg'}`;
+
+            const response = await reimbursementApi.processDraftReceipt(id, {
+                absolute_path: imagePath,
+                mime_type: mimeType,
+                provider: modelId,
+            });
+
+            if (response.success) {
+                // Fetch the updated reimbursement details
+                const detailResponse = await reimbursementApi.getReimbursement(id);
+                if (detailResponse.success) {
+                    set((state) => ({
+                        entries: state.entries.map((e) =>
+                            e.id === id ? detailResponse.data : e
+                        ),
+                        isSubmitting: false,
+                    }));
+                    return detailResponse.data;
+                }
+            }
+
+            set({
+                isSubmitting: false,
+                error: response.message || 'Gagal memproses ulang struk dengan AI',
+            });
+            return null;
+        } catch (error: any) {
+            console.error('[ReprocessReimbursement] Error:', error);
+            const errorMessage =
+                error.response?.data?.message ||
+                error.message ||
+                'Gagal memproses ulang struk dengan AI';
+
+            set({
+                isSubmitting: false,
+                error: errorMessage,
+            });
             return null;
         }
     },
