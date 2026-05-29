@@ -12,8 +12,8 @@ export default function AISettingsScreen() {
     const router = useRouter();
     const { user, updateProfile, isLoading } = useAuthStore();
 
-    // Default to gemma-3-27b-it if user hasn't set it yet
-    const currentModelId = user?.preferred_ai_model || 'gemma-3-27b-it';
+    // Default to gemini-3.5-flash if user hasn't set it yet
+    const currentModelId = user?.preferred_ai_model || 'gemini-3.5-flash';
     const [selectedModel, setSelectedModel] = useState<string>(currentModelId);
 
     const handleSelectModel = (modelId: string) => {

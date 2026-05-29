@@ -7,8 +7,8 @@ export interface AIModelOption {
 
 export const AI_MODELS: AIModelOption[] = [
     {
-        id: 'gemini-1.5-flash',
-        name: 'Gemini 3 Flash',
+        id: 'gemini-3.5-flash',
+        name: 'Gemini 3.5 Flash',
         description: 'Paling Akurat. Terbaik untuk struk yang tulisannya agak pudar atau miring.',
         limit: '~20 RPD',
     },
