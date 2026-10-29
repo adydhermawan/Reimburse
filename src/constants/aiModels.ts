@@ -5,11 +5,19 @@ export interface AIModelOption {
     limit: string;
 }
 
+export const DEFAULT_AI_MODEL = 'qwen/qwen3.8-27b';
+
 export const AI_MODELS: AIModelOption[] = [
+    {
+        id: 'qwen/qwen3.8-27b',
+        name: 'Qwen 3.8 (Groq)',
+        description: 'Default. Sangat cepat & stabil via Groq, akurat untuk struk belanja.',
+        limit: '~1000 RPD',
+    },
     {
         id: 'gemini-3.5-flash',
         name: 'Gemini 3.5 Flash',
-        description: 'Terbaru & Paling Akurat. Terbaik untuk segala jenis struk belanja.',
+        description: 'Alternatif Gemini terbaru. Akurat untuk segala jenis struk belanja.',
         limit: '~20 RPD',
     },
     {

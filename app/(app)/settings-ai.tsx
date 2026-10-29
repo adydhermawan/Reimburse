@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Check, Sparkles, Cpu, Zap, ZapOff, Fingerprint, Activity } from 'lucide-react-native';
 import { colors } from '../../src/constants/theme';
-import { AI_MODELS, AIModelOption } from '../../src/constants/aiModels';
+import { AI_MODELS, AIModelOption, DEFAULT_AI_MODEL } from '../../src/constants/aiModels';
 import { useAuthStore } from '../../store/authStore';
 import * as Haptics from '../../src/services/platformHaptics';
 
@@ -12,8 +12,8 @@ export default function AISettingsScreen() {
     const router = useRouter();
     const { user, updateProfile, isLoading } = useAuthStore();
 
-    // Default to gemini-3.5-flash if user hasn't set it yet
-    const currentModelId = user?.preferred_ai_model || 'gemini-3.5-flash';
+    // Default to the Groq model if user hasn't set it yet
+    const currentModelId = user?.preferred_ai_model || DEFAULT_AI_MODEL;
     const [selectedModel, setSelectedModel] = useState<string>(currentModelId);
 
     const handleSelectModel = (modelId: string) => {

@@ -8,7 +8,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { reimbursementApi } from '../../../src/services';
 import { colors } from '../../../src/constants/theme';
 import { Reimbursement } from '../../../src/types';
-import { AI_MODELS } from '../../../src/constants/aiModels';
+import { AI_MODELS, DEFAULT_AI_MODEL } from '../../../src/constants/aiModels';
 import * as Haptics from '../../../src/services/platformHaptics';
 
 // Status colors matching API status values
@@ -46,7 +46,7 @@ export default function EntryDetailScreen() {
 
     // Reprocessing AI States
     const [showModelModal, setShowModelModal] = useState(false);
-    const [selectedModel, setSelectedModel] = useState<string>(user?.preferred_ai_model || 'gemini-3.5-flash');
+    const [selectedModel, setSelectedModel] = useState<string>(user?.preferred_ai_model || DEFAULT_AI_MODEL);
     const [isReprocessing, setIsReprocessing] = useState(false);
 
     // Update selected model when user preferred model changes
