@@ -1,31 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, ActivityIndicator } from 'react-native';
 import { useRouter, useGlobalSearchParams } from 'expo-router';
-import { ArrowLeft, Zap, Utensils, Coffee, Fuel, Car, Smartphone, MoreHorizontal, X, FileText } from 'lucide-react-native';
+import { ArrowLeft, Zap, MoreHorizontal, X } from 'lucide-react-native';
 import { ScreenWrapper, Button, Input } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
+import { getCategoryIcon, categoryColors } from '../../../src/constants/categoryIcons';
 import { useNewEntryStore } from '../../../store/newEntryStore';
 import { useCategoryStore } from '../../../store/categoryStore';
 import * as Haptics from '../../../src/services/platformHaptics';
-
-// Map category icons from API
-const categoryIcons: Record<string, any> = {
-    'utensils': Utensils,
-    'coffee': Coffee,
-    'fuel': Fuel,
-    'car': Car,
-    'smartphone': Smartphone,
-    'hotel': FileText,
-};
-
-const defaultColors = [
-    colors.categoryFood,
-    colors.categoryCoffee,
-    colors.categoryFuel,
-    colors.categoryTransport,
-    colors.categoryTopup,
-    colors.textMuted,
-];
 
 export default function CategoryScreen() {
     const router = useRouter();
@@ -113,8 +95,8 @@ export default function CategoryScreen() {
                 <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                     <View className="flex-row flex-wrap justify-between">
                         {categories.map((cat, index) => {
-                            const IconComponent = categoryIcons[cat.icon] || FileText;
-                            const color = defaultColors[index % defaultColors.length];
+                            const IconComponent = getCategoryIcon(cat.icon);
+                            const color = categoryColors[index % categoryColors.length];
                             const isSelected = selectedCategory === cat.name;
 
                             return (

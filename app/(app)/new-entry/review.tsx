@@ -9,6 +9,7 @@ import { useReimbursementStore } from '../../../store/reimbursementStore';
 import { useCategoryStore } from '../../../store/categoryStore';
 import { useOfflineSyncStore } from '../../../store/offlineSyncStore';
 import * as Haptics from '../../../src/services/platformHaptics';
+import { formatDateOnly } from '../../../src/utils/date';
 
 export default function ReviewScreen() {
     const router = useRouter();
@@ -76,7 +77,7 @@ export default function ReviewScreen() {
 
         // Format date with validation
         const validDate = getValidDate();
-        const formattedDate = validDate.toISOString().split('T')[0];
+        const formattedDate = formatDateOnly(validDate);
 
         // Prepare base data
         const baseData: any = {

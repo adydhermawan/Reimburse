@@ -10,6 +10,7 @@ import { colors } from '../../../src/constants/theme';
 import { Reimbursement } from '../../../src/types';
 import { AI_MODELS, DEFAULT_AI_MODEL } from '../../../src/constants/aiModels';
 import * as Haptics from '../../../src/services/platformHaptics';
+import { parseDateOnly } from '../../../src/utils/date';
 
 // Status colors matching API status values
 const statusColors: Record<string, { bg: string; text: string; label: string }> = {
@@ -119,7 +120,7 @@ export default function EntryDetailScreen() {
     };
 
     const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
+        const date = parseDateOnly(dateStr);
         return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     };
 

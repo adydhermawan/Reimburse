@@ -76,6 +76,19 @@ interface ReimbursementState {
     reset: () => void;
 }
 
+// Merge entries by id, keeping the first occurrence (prevents duplicated rows in lists)
+const uniqueById = (items: Reimbursement[]): Reimbursement[] => {
+    const seen = new Set<number>();
+    return items.filter((item) => {
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+    });
+};
+
+// Incremented on every list fetch so responses from older, overlapping requests are ignored
+let listRequestId = 0;
+
 export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
     entries: [],
     summary: null,
@@ -89,6 +102,8 @@ export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
      * Fetch reimbursements with filters and pagination
      */
     fetchReimbursements: async (filters?: ReimbursementFilters, append = false) => {
+        const requestId = append ? listRequestId : ++listRequestId;
+
         // Set loading state
         if (append) {
             set({ isLoadingMore: true, error: null });
@@ -100,13 +115,16 @@ export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
         try {
             const response = await reimbursementApi.getReimbursements(filters);
 
+            // A newer list fetch (e.g. another screen or filter change) has started; drop this result
+            if (requestId !== listRequestId) return;
+
             if (response.success) {
                 const paginatedData = response.data;
 
                 set((state) => ({
                     entries: append
-                        ? [...state.entries, ...paginatedData.data]
-                        : paginatedData.data,
+                        ? uniqueById([...state.entries, ...paginatedData.data])
+                        : uniqueById(paginatedData.data),
                     pagination: {
                         currentPage: paginatedData.current_page,
                         lastPage: paginatedData.last_page || 1,
@@ -123,6 +141,7 @@ export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
                 });
             }
         } catch (error: any) {
+            if (requestId !== listRequestId) return;
             set({
                 isLoading: false,
                 isLoadingMore: false,
@@ -158,7 +177,7 @@ export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
             if (response.success) {
                 // Add new entry to the beginning of the list
                 set((state) => ({
-                    entries: [response.data, ...state.entries],
+                    entries: uniqueById([response.data, ...state.entries]),
                     isSubmitting: false,
                 }));
                 return response.data;
@@ -272,9 +291,11 @@ export const useReimbursementStore = create<ReimbursementState>((set, get) => ({
         try {
             const response = await reimbursementApi.getReimbursement(id);
             if (response.success) {
-                // Add to entries cache
+                // Replace cached entry if present, otherwise add it
                 set((state) => ({
-                    entries: [...state.entries, response.data],
+                    entries: state.entries.some((e) => e.id === id)
+                        ? state.entries.map((e) => (e.id === id ? response.data : e))
+                        : [...state.entries, response.data],
                 }));
                 return response.data;
             }

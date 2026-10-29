@@ -9,6 +9,7 @@ import { Bell, Utensils, Coffee, Fuel, Car, Smartphone, TrendingUp, Calendar, Fi
 import { ScreenWrapper } from '../../../src/components';
 import { colors } from '../../../src/constants/theme';
 import * as Haptics from '../../../src/services/platformHaptics';
+import { parseDateOnly } from '../../../src/utils/date';
 
 // Map category icons
 const categoryIcons: Record<string, any> = {
@@ -320,7 +321,7 @@ export default function Dashboard() {
                                                 {item.client?.name || 'Unknown Client'}
                                             </Text>
                                             <Text className="text-text-secondary text-xs">
-                                                {isProcessingAI ? 'Menunggu AI...' : (item.category?.name || item.category_name || 'No Category')} • {new Date(item.transaction_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                                {isProcessingAI ? 'Menunggu AI...' : (item.category?.name || item.category_name || 'No Category')} • {parseDateOnly(item.transaction_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                             </Text>
                                         </View>
                                     </View>

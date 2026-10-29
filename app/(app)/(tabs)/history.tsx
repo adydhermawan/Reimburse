@@ -8,6 +8,7 @@ import { colors } from '../../../src/constants/theme';
 import { ReimbursementFilters } from '../../../src/types';
 import { ScreenWrapper } from '../../../src/components';
 import * as Haptics from '../../../src/services/platformHaptics';
+import { parseDateOnly, formatDateOnly } from '../../../src/utils/date';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 type StatusFilter = 'pending' | 'approved' | 'rejected' | 'in_report' | 'paid' | 'all';
@@ -59,10 +60,10 @@ export default function HistoryScreen() {
             filters.search = activeSearch;
         }
         if (activeDateFrom) {
-            filters.date_from = activeDateFrom.toISOString().split('T')[0];
+            filters.date_from = formatDateOnly(activeDateFrom);
         }
         if (activeDateTo) {
-            filters.date_to = activeDateTo.toISOString().split('T')[0];
+            filters.date_to = formatDateOnly(activeDateTo);
         }
         return filters;
     }, [activeTab, activeSearch, activeDateFrom, activeDateTo]);
@@ -81,7 +82,7 @@ export default function HistoryScreen() {
     }, [buildFilters]);
 
     const handleLoadMore = () => {
-        if (!isLoadingMore && pagination && pagination.currentPage < pagination.lastPage) {
+        if (!isLoading && !isLoadingMore && pagination && pagination.currentPage < pagination.lastPage) {
             fetchReimbursements({ ...buildFilters(), page: pagination.currentPage + 1 }, true);
         }
     };
@@ -124,7 +125,7 @@ export default function HistoryScreen() {
     };
 
     const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
+        const date = parseDateOnly(dateStr);
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
